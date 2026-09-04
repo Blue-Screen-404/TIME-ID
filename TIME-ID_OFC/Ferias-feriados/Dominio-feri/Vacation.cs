@@ -1,3 +1,4 @@
+/*Dominio Vacation*/
 public class Vacation 
 { 
     public Guid Id { get; set; } 

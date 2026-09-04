@@ -1,3 +1,4 @@
+/*Dominio DashboardMetrics*/
 public class DashboardMetrics 
 { 
     public int ActiveEmployees { get; set; } 

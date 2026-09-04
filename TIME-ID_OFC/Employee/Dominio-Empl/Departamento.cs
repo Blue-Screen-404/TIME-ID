@@ -1,3 +1,4 @@
+/*Dominio Department*/
 public class Department
 {
     public Guid Id { get; set; }

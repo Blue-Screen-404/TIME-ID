@@ -1,3 +1,4 @@
+/*Dominio TimeRecord*/
 public class TimeRecord 
 { 
     public Guid Id { get; set; } 

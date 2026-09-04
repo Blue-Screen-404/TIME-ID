@@ -1,3 +1,4 @@
+/*Dominio Permission*/
 public class Permission 
 { 
     public Guid Id { get; set; } 
