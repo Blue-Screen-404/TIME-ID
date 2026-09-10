@@ -1,3 +1,4 @@
+/*Dominio Role*/
 public class Role 
 { 
     public Guid Id { get; set; } 

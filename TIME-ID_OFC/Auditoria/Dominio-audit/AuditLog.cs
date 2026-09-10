@@ -1,17 +1,16 @@
-public class Holiday
-{
-    public Guid Id { get; set; }
+/*Dominio AuditLog*/
+public class AuditLog { 
+    public Guid Id { get; set; } 
 
-    public string Name { get; set; }
+    public Guid UserId { get; set; } 
 
-    public DateTime Date { get; set; }
+    public string Action { get; set; } 
 
-    public HolidayType Type { get; set; }
-}
-public enum HolidayType
-{
-    National,
-    State,
-    Municipal,
-    Corporate
+    public string EntityName { get; set; }
+
+    public string EntityId { get; set; } 
+
+    public DateTime CreatedAt { get; set; }
+     
+    public string Details { get; set; } 
 }
