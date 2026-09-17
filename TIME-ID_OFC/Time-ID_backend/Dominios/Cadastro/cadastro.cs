@@ -1,0 +1,1 @@
+//Fazer vínculo entre usuário e perfil, jornada de trabalho, validação da sequência de pontos, conflito entre períodos de férias e proteção das alterações de status.
