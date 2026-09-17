@@ -1,5 +1,0 @@
-C:\Users\arthu\Arthur\Unifeso-projetos\TIME-ID\TIME-ID_OFC\obj\Debug\net8.0\TIME-ID_OFC.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\arthu\Arthur\Unifeso-projetos\TIME-ID\TIME-ID_OFC\obj\Debug\net8.0\TIME-ID_OFC.AssemblyInfoInputs.cache
-C:\Users\arthu\Arthur\Unifeso-projetos\TIME-ID\TIME-ID_OFC\obj\Debug\net8.0\TIME-ID_OFC.AssemblyInfo.cs
-C:\Users\arthu\Arthur\Unifeso-projetos\TIME-ID\TIME-ID_OFC\obj\Debug\net8.0\TIME-ID_OFC.csproj.CoreCompileInputs.cache
-C:\Users\arthu\Arthur\Unifeso-projetos\TIME-ID\TIME-ID_OFC\obj\Debug\net8.0\TIME-ID_OFC.sourcelink.json

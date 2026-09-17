@@ -47,22 +47,10 @@ Fornecer uma solução moderna para gestão de pessoas, controle de frequência 
 
 - C#
 - .NET 8
-- ASP.NET Core
-- Entity Framework Core
 
 ## Frontend
 
-### Principal
-
-- Blazor
-
-### Complementar
-
 - React
-
-## Banco de Dados
-
-- SQLite3
 
 ## Controle de Versão
 
@@ -74,15 +62,27 @@ Fornecer uma solução moderna para gestão de pessoas, controle de frequência 
 # Estrutura do Projeto
 
 ```text
-TIMEID
-│
-├── Backend
-├── Frontend-Blazor
-├── Frontend-React
-├── Database
-├── Documentation
-└── Tests
+TIME-ID/
+├── .gitignore
+├── README.md
+├── TIME-ID_OFC/
+│   ├── Time-ID_backend/
+│   │   ├── Dominios/
+│   │   ├── Program.cs
+│   │   └── TIME-ID_OFC.csproj
+│   └── Time-ID_frontend/
+│       ├── package.json
+│       └── src/
+│           ├── App.jsx
+│           └── main.jsx
+├── TIMEID-Plano_dev.docx
+├── TIMEID.docx
+└── anotacoes.txt
 ```
+
+O projeto está em fase inicial. O backend usa C# e .NET, e o frontend será desenvolvido em React. A inicialização das aplicações ainda está em implementação.
+
+As pastas locais ainda vazias, como `API_controller`, `DTOs`, `Services`, `components`, `pages` e `services`, não são versionadas pelo Git até receberem arquivos. As pastas geradas `bin/` e `obj/` são ignoradas.
 
 ---
 
@@ -261,6 +261,7 @@ Alertas gerados pela Inteligência Artificial.
 Instalar:
 
 - .NET SDK 8.0
+- Node.js e npm (para o frontend React)
 - Git
 - Visual Studio 2022 ou VS Code
 
@@ -268,6 +269,8 @@ Verificar instalação:
 
 ```bash
 dotnet --version
+node --version
+npm --version
 ```
 
 ---
@@ -286,8 +289,10 @@ cd TIME-ID
 
 ## Restaurar Dependências
 
+Na raiz do repositório, informe o caminho do projeto backend:
+
 ```bash
-dotnet restore
+dotnet restore TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
 ```
 
 ---
@@ -295,34 +300,28 @@ dotnet restore
 ## Compilar
 
 ```bash
-dotnet build
+dotnet build TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
 ```
+
+A compilação do executável depende da implementação do ponto de entrada em `Program.cs`, que ainda está vazio.
 
 ---
 
 ## Executar
 
+Após implementar a inicialização do backend:
+
 ```bash
-dotnet run
+dotnet run --project TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
 ```
+
+O frontend ainda contém arquivos iniciais vazios. Os comandos de instalação e execução serão documentados após configurar as dependências e os scripts no `package.json`.
 
 ---
 
 # Banco de Dados
 
-Quando o SQLite e o Entity Framework estiverem configurados:
-
-Criar migrations:
-
-```bash
-dotnet ef migrations add InitialCreate
-```
-
-Aplicar migrations:
-
-```bash
-dotnet ef database update
-```
+A configuração de persistência será documentada quando for definida e implementada.
 
 ---
 
