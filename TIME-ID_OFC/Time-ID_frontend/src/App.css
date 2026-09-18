@@ -1,0 +1,42 @@
+app.css
+:root {
+    --lado-esquerdo-cor: #003d2c;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.pagina-login {
+    min-height: 100vh;
+    display: flex;
+}
+
+.lado-esquerdo {
+    width: 50%;
+    background-color: var(--lado-esquerdo-cor);
+    color: white;
+    padding: 60px;
+
+}
+
+.lado-direito {
+    width: 500px;
+    background-color: #f4f7f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-login {
+    width: 500px;
+    background-color: white;
+    padding: 40px;
+    border-radius: 20px;
+}
