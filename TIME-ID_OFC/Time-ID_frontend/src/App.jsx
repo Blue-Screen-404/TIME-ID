@@ -3,56 +3,62 @@ import "./App.css";
 function App() {
   return (
     <main className="pagina-login">
-
-      {/* Lado esquerdo da tela */}
       <section className="lado-esquerdo">
+        <div className="marca">
+          <span className="icone-logo">◷</span>
 
-        <h1>TIMEID</h1>
+          <h1>
+            TIME<strong>ID</strong>
+          </h1>
+        </div>
 
-        <h2>
-          Mais controle, mais pessoas,
-          mais resultados.
-        </h2>
+        <div className="apresentacao">
+          <h2>
+            Mais controle, mais pessoas,
+            <br />
+            mais resultados.
+          </h2>
 
-        <p>
-          Sistema de ponto e gestão de pessoas
-          para empresas de todos os tamanhos.
-        </p>
-
+          <p>
+            Sistema de ponto e gestão de pessoas
+            <br />
+            para empresas de todos os tamanhos.
+          </p>
+        </div>
       </section>
 
-
-      {/* Lado direito da tela */}
       <section className="lado-direito">
-
         <div className="card-login">
+          <div className="marca-card">
+            <span className="icone-logo">◷</span>
 
-          <h1>TIMEID</h1>
+            <h1>
+              TIME<strong>ID</strong>
+            </h1>
+          </div>
 
           <h2>Bem-vindo!</h2>
 
-          <p>
-            Faça seu login para acessar o sistema.
-          </p>
+          <p>Faça seu login para acessar o sistema.</p>
 
-          <input
-            type="text"
-            placeholder="Usuário ou e-mail"
-          />
+          <form>
+            <input type="text" placeholder="Usuário ou e-mail" />
 
-          <input
-            type="password"
-            placeholder="Senha"
-          />
+            <input type="password" placeholder="Senha" />
 
-          <button>
-            Entrar
-          </button>
+            <div className="opcoes-login">
+              <label>
+                <input type="checkbox" />
+                Lembrar de mim
+              </label>
 
+              <a href="/">Esqueceu a senha?</a>
+            </div>
+
+            <button type="button">Entrar</button>
+          </form>
         </div>
-
       </section>
-
     </main>
   );
 }

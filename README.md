@@ -505,3 +505,68 @@ chore:
 Blue-Screen-404
 
 Projeto acadêmico desenvolvido para a disciplina de desenvolvimento de software e evolução para uma plataforma inteligente de gestão de pessoas e segurança corporativa.
+
+
+TIMEID — Frontend
+
+Interface web do sistema TIMEID, desenvolvida com React e Vite.
+
+Pré-requisitos
+
+Antes de iniciar, instale:
+
+Node.js 22 LTS
+
+GitHub Desktop ou Git
+
+O Node.js já instala o npm automaticamente. Após a instalação, confirme no terminal:
+
+node --version
+npm --version
+
+Use Node.js 20.19 ou superior.
+
+Baixar o projeto
+
+Pelo GitHub Desktop
+
+Abra o GitHub Desktop e faça login.
+
+Clique em File → Clone repository.
+
+Selecione o repositório TIME-ID.
+
+Escolha a pasta onde o projeto será salvo e clique em Clone.
+
+No GitHub Desktop, clique em Repository → Open in Terminal.
+
+Pelo terminal
+
+git clone https://github.com/Blue-Screen-404/TIME-ID.git
+cd TIME-ID
+
+Instalar as dependências
+
+Entre na pasta do frontend:
+
+cd TIME-ID_OFC/Time-ID_frontend
+
+Instale as bibliotecas do projeto, incluindo React e Vite:
+
+npm install
+
+Esse comando é necessário apenas na primeira execução ou quando as dependências forem atualizadas.
+
+Iniciar o frontend
+
+Ainda na pasta Time-ID_frontend, execute:
+
+npm run dev
+
+O Vite mostrará um endereço parecido com este:
+
+http://localhost:5173/
+
+Abra o endereço informado no navegador. Mantenha o terminal aberto enquanto estiver usando o projeto.
+
+Para encerrar o servidor, pressione Ctrl + C no terminal.

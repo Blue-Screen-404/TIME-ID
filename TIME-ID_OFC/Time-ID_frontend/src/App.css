@@ -1,42 +1,206 @@
-app.css
-:root {
-    --lado-esquerdo-cor: #003d2c;
-}
-
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: Arial, sans-serif;
+  font-family: Arial, sans-serif;
 }
 
 .pagina-login {
-    min-height: 100vh;
-    display: flex;
+  min-height: 100vh;
+  display: flex;
+  background-color: #eef3f1;
 }
 
 .lado-esquerdo {
-    width: 50%;
-    background-color: var(--lado-esquerdo-cor);
-    color: white;
-    padding: 60px;
-
+  width: 48%;
+  min-height: 100vh;
+  padding: 72px 7%;
+  color: white;
+  background-color: #003d2c;
+  background-image: url("./assets/fundo-login.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .lado-direito {
-    width: 500px;
-    background-color: #f4f7f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  width: 52%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.marca,
+.marca-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icone-logo {
+  color: #24e77a;
+  font-size: 64px;
+  line-height: 1;
+}
+
+.marca h1,
+.marca-card h1 {
+  font-size: 48px;
+  letter-spacing: 2px;
+}
+
+.marca h1 strong,
+.marca-card h1 strong {
+  color: #24e77a;
+}
+
+.apresentacao {
+  margin-top: 90px;
+}
+
+.apresentacao h2 {
+  max-width: 490px;
+  font-size: 40px;
+  line-height: 1.18;
+}
+
+.apresentacao p {
+  margin-top: 22px;
+  color: #c7d8d2;
+  font-size: 19px;
+  line-height: 1.55;
 }
 
 .card-login {
-    width: 500px;
-    background-color: white;
-    padding: 40px;
-    border-radius: 20px;
+  width: 100%;
+  max-width: 620px;
+  padding: 56px;
+  border-radius: 22px;
+  background-color: white;
+  box-shadow: 0 18px 45px rgba(0, 37, 27, 0.12);
+}
+
+.marca-card {
+  justify-content: center;
+}
+
+.marca-card .icone-logo {
+  font-size: 50px;
+}
+
+.marca-card h1 {
+  color: #003d2c;
+  font-size: 38px;
+}
+
+.card-login h2 {
+  margin-top: 42px;
+  color: #003d2c;
+  font-size: 38px;
+  text-align: center;
+}
+
+.card-login > p {
+  margin: 14px 0 36px;
+  color: #708078;
+  font-size: 18px;
+  text-align: center;
+}
+
+.card-login form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card-login input[type="text"],
+.card-login input[type="password"] {
+  width: 100%;
+  padding: 20px;
+  border: 1px solid #d8e0dc;
+  border-radius: 12px;
+  color: #163a2e;
+  font-size: 17px;
+  outline: none;
+}
+
+.card-login input[type="text"]:focus,
+.card-login input[type="password"]:focus {
+  border-color: #00a661;
+  box-shadow: 0 0 0 3px rgba(0, 166, 97, 0.12);
+}
+
+.opcoes-login {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 10px;
+  color: #65756e;
+  font-size: 15px;
+}
+
+.opcoes-login label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.opcoes-login input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #008c55;
+}
+
+.opcoes-login a {
+  color: #008c55;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.card-login button {
+  padding: 19px;
+  border: 0;
+  border-radius: 12px;
+  background-color: #008c55;
+  color: white;
+  cursor: pointer;
+  font-size: 19px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.card-login button:hover {
+  background-color: #006e43;
+}
+
+@media (max-width: 850px) {
+  .pagina-login {
+    flex-direction: column;
+  }
+
+  .lado-esquerdo,
+  .lado-direito {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .lado-esquerdo {
+    padding: 52px 10%;
+  }
+
+  .apresentacao {
+    margin-top: 55px;
+  }
+
+  .lado-direito {
+    padding: 32px 20px;
+  }
+
+  .card-login {
+    padding: 38px 28px;
+  }
 }
