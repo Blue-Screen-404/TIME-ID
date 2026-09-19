@@ -506,6 +506,7 @@ Blue-Screen-404
 
 Projeto acadêmico desenvolvido para a disciplina de desenvolvimento de software e evolução para uma plataforma inteligente de gestão de pessoas e segurança corporativa.
 
+# fazer o sistema funcionar APP
 
 TIMEID — Frontend
 
@@ -556,6 +557,7 @@ Instale as bibliotecas do projeto, incluindo React e Vite:
 npm install
 
 Esse comando é necessário apenas na primeira execução ou quando as dependências forem atualizadas.
+E caso ele não funcione ou gere um erro, selecione no terminal do vscode a seta para baixo e exeute o command prompt e ali tente exeutar o comando novamente.
 
 Iniciar o frontend
 
