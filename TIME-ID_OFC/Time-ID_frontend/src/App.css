@@ -117,10 +117,23 @@ body {
   gap: 18px;
 }
 
+.campo-login {
+  position: relative;
+}
+
+.campo-login img {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+}
+
 .card-login input[type="text"],
 .card-login input[type="password"] {
   width: 100%;
-  padding: 20px;
+  padding: 20px 20px 20px 48px;
   border: 1px solid #d8e0dc;
   border-radius: 12px;
   color: #163a2e;
@@ -162,6 +175,7 @@ body {
 }
 
 .card-login button {
+  width: 100%;
   padding: 19px;
   border: 0;
   border-radius: 12px;
@@ -202,5 +216,59 @@ body {
 
   .card-login {
     padding: 38px 28px;
+  }
+}
+
+@media (max-width: 500px) {
+  .lado-direito {
+    padding: 20px 14px;
+  }
+
+  .card-login {
+    padding: 32px 20px;
+    border-radius: 16px;
+  }
+
+  .card-login h2 {
+    margin-top: 30px;
+    font-size: 30px;
+  }
+
+  .card-login > p {
+    margin-bottom: 28px;
+    font-size: 16px;
+  }
+
+  .card-login input[type="text"],
+  .card-login input[type="password"] {
+    padding: 17px 16px 17px 46px;
+    font-size: 16px;
+  }
+
+  .campo-login img {
+    width: 17px;
+    height: 17px;
+    left: 16px;
+  }
+
+  .opcoes-login {
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  .opcoes-login label {
+    gap: 7px;
+  }
+
+  .opcoes-login input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+  }
+
+  .card-login button {
+    padding: 17px;
+    font-size: 17px;
   }
 }

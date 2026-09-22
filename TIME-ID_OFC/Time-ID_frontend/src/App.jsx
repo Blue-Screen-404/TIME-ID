@@ -1,4 +1,6 @@
 import "./App.css";
+import iconeUsuario from "./assets/icone-usuario.png";
+import iconeSenha from "./assets/icone-senha.png";
 
 function App() {
   return (
@@ -42,9 +44,23 @@ function App() {
           <p>Faça seu login para acessar o sistema.</p>
 
           <form>
-            <input type="text" placeholder="Usuário ou e-mail" />
+            <div className="campo-login">
+              <img src={iconeUsuario} alt="" />
 
-            <input type="password" placeholder="Senha" />
+              <input
+                type="text"
+                placeholder="Usuário ou e-mail"
+              />
+            </div>
+
+            <div className="campo-login">
+              <img src={iconeSenha} alt="" />
+
+              <input
+                type="password"
+                placeholder="Senha"
+              />
+            </div>
 
             <div className="opcoes-login">
               <label>
