@@ -3,10 +3,10 @@ public class Department
 {
     public Guid Id { get; set; }
 
-    public string Name { get; set; }
-    public string Description { get; set; }
+    public required string Name { get; set; }
+    public string Description { get; set; } = string.Empty;
 
-    public ICollection<Employee> Employees { get; set; }
+    public ICollection<Employee> Employees { get; set; } = new List<Employee>();
 
     public void UpdateDetails(string name, string description)
     {
