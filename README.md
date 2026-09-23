@@ -2,6 +2,8 @@
 
 Sistema Inteligente de Gestão de Pessoas, Controle de Jornada e Segurança Corporativa.
 
+**Para iniciar o login temporário, siga [Executar e testar o backend](#executar-e-testar-o-backend).**
+
 ---
 
 ## Sobre o Projeto
@@ -80,9 +82,9 @@ TIME-ID/
 └── anotacoes.txt
 ```
 
-O projeto está em fase inicial. O backend usa C# e .NET, e o frontend será desenvolvido em React. A inicialização das aplicações ainda está em implementação.
+O projeto está em fase inicial. O backend usa C# e .NET, e o frontend será desenvolvido em React. O backend possui uma API de login temporário funcional; o frontend será integrado a partir de outro projeto.
 
-As pastas locais ainda vazias, como `API_controller`, `DTOs`, `Services`, `components`, `pages` e `services`, não são versionadas pelo Git até receberem arquivos. As pastas geradas `bin/` e `obj/` são ignoradas.
+Pastas vazias não são versionadas pelo Git. O backend possui DTOs, serviço de autenticação e controller de login implementados. As pastas geradas `bin/` e `obj/` são ignoradas.
 
 ---
 
@@ -253,78 +255,6 @@ Registro de localização.
 Alertas gerados pela Inteligência Artificial.
 
 ---
-
-# Instalação
-
-## Pré-requisitos
-
-Instalar:
-
-- .NET SDK 8.0
-- Node.js e npm (para o frontend React)
-- Git
-- Visual Studio 2022 ou VS Code
-
-Verificar instalação:
-
-```bash
-dotnet --version
-node --version
-npm --version
-```
-
----
-
-## Clonar o Repositório
-
-```bash
-git clone https://github.com/Blue-Screen-404/TIME-ID.git
-```
-
-```bash
-cd TIME-ID
-```
-
----
-
-## Restaurar Dependências
-
-Na raiz do repositório, informe o caminho do projeto backend:
-
-```bash
-dotnet restore TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
-```
-
----
-
-## Compilar
-
-```bash
-dotnet build TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
-```
-
-A compilação do executável depende da implementação do ponto de entrada em `Program.cs`, que ainda está vazio.
-
----
-
-## Executar
-
-Após implementar a inicialização do backend:
-
-```bash
-dotnet run --project TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
-```
-
-O frontend ainda contém arquivos iniciais vazios. Os comandos de instalação e execução serão documentados após configurar as dependências e os scripts no `package.json`.
-
----
-
-# Banco de Dados
-
-A configuração de persistência será documentada quando for definida e implementada.
-
----
-
 # Git Flow
 
 ## Branch Principal
@@ -505,3 +435,217 @@ chore:
 Blue-Screen-404
 
 Projeto acadêmico desenvolvido para a disciplina de desenvolvimento de software e evolução para uma plataforma inteligente de gestão de pessoas e segurança corporativa.
+
+# fazer o sistema funcionar APP
+
+TIMEID — Frontend
+
+Interface web do sistema TIMEID, desenvolvida com React e Vite.
+
+Pré-requisitos
+
+Antes de iniciar, instale:
+
+Node.js 22 LTS
+
+GitHub Desktop ou Git
+
+O Node.js já instala o npm automaticamente. Após a instalação, confirme no terminal:
+
+node --version
+npm --version
+
+Use Node.js 20.19 ou superior.
+
+Baixar o projeto
+
+Pelo GitHub Desktop
+
+Abra o GitHub Desktop e faça login.
+
+Clique em File → Clone repository.
+
+Selecione o repositório TIME-ID.
+
+Escolha a pasta onde o projeto será salvo e clique em Clone.
+
+No GitHub Desktop, clique em Repository → Open in Terminal.
+
+Pelo terminal
+
+git clone https://github.com/Blue-Screen-404/TIME-ID.git
+cd TIME-ID
+
+Instalar as dependências
+
+Entre na pasta do frontend:
+
+cd TIME-ID_OFC/Time-ID_frontend
+
+Instale as bibliotecas do projeto, incluindo React e Vite:
+
+npm install
+
+Esse comando é necessário apenas na primeira execução ou quando as dependências forem atualizadas.
+E caso ele não funcione ou gere um erro, selecione no terminal do vscode a seta para baixo e exeute o command prompt e ali tente exeutar o comando novamente.
+
+Iniciar o frontend
+
+Ainda na pasta Time-ID_frontend, execute:
+
+npm run dev
+
+O Vite mostrará um endereço parecido com este:
+
+http://localhost:5173/
+
+Abra o endereço informado no navegador. Mantenha o terminal aberto enquanto estiver usando o projeto.
+
+Para encerrar o servidor, pressione Ctrl + C no terminal.
+
+
+
+# Executar e testar o backend
+
+O backend é uma **API feita em .NET 8**. Ele roda no seu computador e recebe pedidos pelo endereço **http://localhost:5000**. Esse endereço não é um frontend React nem um site publicado. Nesta etapa, você testa o login pelo PowerShell; ainda não há uma tela com campos de e-mail e senha.
+
+Você usará **dois terminais**:
+- **Terminal 1:** mantém o backend ligado.
+- **Terminal 2:** envia o e-mail e a senha e testa a sessão.
+
+## 1. Abra a pasta certa
+
+No VS Code, abra a pasta principal TIME-ID, que contém este README, global.json e a pasta TIME-ID_OFC. Depois abra **Terminal > Novo Terminal** e escolha **PowerShell**.
+
+## 2. Confira o .NET
+
+```powershell
+dotnet --version
+```
+
+O global.json seleciona o SDK **8.0.425**, permitindo atualizações de patch da mesma faixa. Se o comando informar que o SDK não foi encontrado, instale essa versão do **SDK .NET**, não apenas o runtime. Para executar somente o backend, você não precisa de Node.js, npm ou React.
+
+## 3. Inicie o backend no Terminal 1
+
+Se ele já estiver rodando em outro terminal, pare a execução anterior com **Ctrl+C** antes de continuar. Se iniciou pelo depurador do VS Code, use **Shift+F5**.
+
+```powershell
+dotnet run --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj --urls http://localhost:5000
+```
+
+Esse comando restaura as dependências, compila e inicia o backend. Não é preciso executar dotnet build separadamente para iniciar.
+
+Aguarde uma mensagem semelhante a:
+
+```text
+Now listening on: http://localhost:5000
+Application started. Press Ctrl+C to shut down.
+```
+
+**Deixe esse terminal aberto.** Ele permanece ocupado enquanto o servidor está funcionando; isso é esperado. Não execute novamente o comando em outro terminal.
+
+Opcionalmente, abra http://localhost:5000 no navegador. Você verá informações da API em JSON, não um formulário de login.
+
+## 4. Faça login no Terminal 2
+
+Abra outro terminal PowerShell pelo botão **+** do painel de terminais. Mantenha o Terminal 1 funcionando.
+
+Use o usuário temporário:
+
+| Campo | Valor |
+|---|---|
+| E-mail | teste@timeid.local |
+| Senha | TimeId@123 |
+
+Copie o bloco inteiro abaixo para o Terminal 2:
+
+```powershell
+$credenciais = @{
+    email = "teste@timeid.local"
+    password = "TimeId@123"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:5000/api/auth/login" -Method Post -ContentType "application/json" -Body $credenciais -SessionVariable sessao
+```
+
+Se funcionar, aparecerão os campos **id**, **username** e **email**. O comando guarda o cookie de autenticação na variável **$sessao** para os próximos passos.
+
+A senha diferencia maiúsculas de minúsculas e não remove espaços. O e-mail ignora diferenças de maiúsculas/minúsculas e espaços nas extremidades.
+
+## 5. Confira se está autenticado
+
+No **mesmo Terminal 2**, execute:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5000/api/auth/me" -WebSession $sessao
+```
+
+A API deve devolver os dados do usuário. Sem o cookie da sessão, essa rota retorna **401**.
+
+## 6. Faça logout
+
+Ainda no Terminal 2:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5000/api/auth/logout" -Method Post -WebSession $sessao
+```
+
+O logout retorna **204**, sem texto no corpo da resposta. Isso é sucesso, não uma falha.
+
+Se repetir o comando do passo 5 após sair, o PowerShell mostrará **401 (Unauthorized)**. Esse resultado é esperado: você já encerrou a sessão. Para entrar novamente, repita o passo 4.
+
+## 7. Pare o backend antes de recompilar ou executar novamente
+
+Volte ao **Terminal 1** e pressione **Ctrl+C**. Aguarde o prompt do PowerShell reaparecer.
+
+Para iniciar de novo, repita o passo 3. Reiniciar o backend invalida os cookies anteriores, então repita também o login do passo 4.
+
+## Solução do erro MSB3021: arquivo em uso
+
+A mensagem "apphost.exe ... TIME-ID_OFC.exe ... being used by another process" significa que uma instância anterior ainda está usando o executável que a compilação tenta substituir.
+
+1. Pare o backend com **Ctrl+C** no terminal onde ele foi iniciado, ou **Shift+F5** se estiver depurando.
+2. Aguarde a execução terminar.
+3. Execute novamente o comando do passo 3.
+
+Se você perdeu o terminal original e o processo continuou aberto, execute este bloco **na raiz do repositório**. Ele encerra somente processos cujo caminho corresponde ao executável deste backend:
+
+```powershell
+$executavel = Join-Path (Get-Location).Path "TIME-ID_OFC/Time-ID_backend/bin/Debug/net8.0/TIME-ID_OFC.exe"
+Get-Process -Name TIME-ID_OFC -ErrorAction SilentlyContinue |
+    Where-Object { $_.Path -eq $executavel } |
+    Stop-Process -Force
+```
+
+Depois repita o passo 3. Se aparecer "Acesso negado", encerre pelo terminal/depurador original ou execute esse mesmo bloco em um PowerShell como administrador, entrando antes na pasta do projeto. Encerrar o backend invalida as sessões temporárias.
+
+Não é necessário apagar bin/obj, reinstalar o .NET ou remover as validações de login para resolver esse bloqueio.
+
+## Outros resultados comuns
+
+| Resultado | Significado / ação |
+|---|---|
+| Conexão recusada | O backend não está ligado. Verifique o Terminal 1 e aguarde a mensagem de inicialização. |
+| Porta 5000 em uso | Já existe um servidor nessa porta. Pare a instância anterior; não inicie duas cópias na mesma porta. |
+| 400 no login | Verifique campos obrigatórios, formato do e-mail e JSON enviado. |
+| 401 no login | E-mail/senha incorretos ou usuário inativo. |
+| 401 em /api/auth/me | Faça login e envie $sessao no mesmo terminal; a sessão também pode ter expirado. |
+| 404 em /api/employees | A API de cadastro foi removida. Nesta etapa, use /api/auth/login, /me e /logout. |
+
+## Armazenamento e duração da sessão
+
+O usuário de demonstração é recriado em memória a cada execução. Não há banco de dados nem cadastro de usuários nesta etapa. A senha é verificada por hash com PasswordHasher<User>; respostas nunca incluem a senha nem o hash.
+
+A sessão usa cookie HttpOnly, SameSite=Strict, não persistente, com validade de até 30 minutos e sem renovação automática. HTTPS utiliza Secure; HTTP é permitido para o teste local. Os cookies deixam de funcionar ao reiniciar o backend. As credenciais documentadas são públicas e destinadas apenas à demonstração local.
+
+## Teste automatizado (opcional)
+
+Pare o backend antes de executar o teste, pois ele também precisa compilar o projeto. Com a porta 5099 livre e o terminal na raiz:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ./scripts/Test-Login.ps1
+```
+
+O teste compila, inicia sua própria instância, verifica login, validações, sessão, logout e reinício e encerra essa instância ao terminar. O resultado esperado é **Todos os testes passaram**.
+
+Para rodar o backend, execute na raiz do repositório: `dotnet run --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj --urls http://localhost:5000`; para parar, pressione Ctrl+C no mesmo terminal.

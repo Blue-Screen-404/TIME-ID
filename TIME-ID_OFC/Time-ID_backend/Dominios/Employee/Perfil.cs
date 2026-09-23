@@ -2,7 +2,7 @@
 public class Role 
 { 
     public Guid Id { get; set; } 
-    public string Name { get; set; } 
+    public required string Name { get; set; }
     private readonly List<Permission> permissions = new();
     public IReadOnlyCollection<Permission> Permissions => permissions.AsReadOnly();
 
