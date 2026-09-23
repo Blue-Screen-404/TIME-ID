@@ -6,17 +6,26 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(AuthenticationService service) : ControllerBase
+public class AuthController : ControllerBase
 {
+    private readonly AuthenticationService service;
+
+    public AuthController(AuthenticationService service)
+    {
+        this.service = service;
+    }
+
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
-        var user = service.ValidateCredentials(request.Email, request.Password);
-        if (user is null)
+        LoginResponse? user = service.ValidateCredentials(request.Email, request.Password);
+        if (user == null)
+        {
             return Problem(statusCode: 401, title: "E-mail ou senha inválidos.");
+        }
 
-        var identity = new ClaimsIdentity(new[]
+        ClaimsIdentity identity = new ClaimsIdentity(new Claim[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
@@ -35,9 +44,19 @@ public class AuthController(AuthenticationService service) : ControllerBase
     [HttpGet("me")]
     public ActionResult<LoginResponse> Me()
     {
-        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id))
+        Guid id;
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out id))
+        {
             return Unauthorized();
-        return service.FindActiveUser(id) is { } user ? Ok(user) : Unauthorized();
+        }
+
+        LoginResponse? user = service.FindActiveUser(id);
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(user);
     }
 
     [Authorize]

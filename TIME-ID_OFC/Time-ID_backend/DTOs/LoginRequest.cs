@@ -7,8 +7,21 @@ public class LoginRequest
     [Required, EmailAddress, StringLength(254)]
     public string Email
     {
-        get => email;
-        set => email = value?.Trim() ?? string.Empty;
+        get
+        {
+            return email;
+        }
+        set
+        {
+            if (value == null)
+            {
+                email = string.Empty;
+            }
+            else
+            {
+                email = value.Trim();
+            }
+        }
     }
 
     [Required, StringLength(256)]
