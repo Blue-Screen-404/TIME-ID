@@ -1,0 +1,147 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f3f8f6;
+}
+
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+}
+
+.menu-lateral {
+  width: 290px;
+  min-height: 100vh;
+  padding: 32px 18px;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  background: linear-gradient(180deg, #004b38, #002d23);
+}
+
+.menu-lateral h1 {
+  padding: 0 16px;
+  font-size: 30px;
+  letter-spacing: 1px;
+}
+
+.menu-lateral h1 span {
+  color: #27e87d;
+}
+
+.menu-lateral nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 50px;
+}
+
+.menu-lateral nav a {
+  padding: 14px 18px;
+  border-radius: 8px;
+  color: #e2f2ec;
+  font-size: 16px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.menu-lateral nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.menu-lateral nav .menu-ativo {
+  background-color: #009a5d;
+  color: white;
+  font-weight: bold;
+}
+
+.menu-lateral footer {
+  margin-top: auto;
+  padding: 18px 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  color: #b9d5cb;
+  font-size: 13px;
+}
+
+.conteudo-dashboard {
+  width: calc(100% - 290px);
+}
+
+.barra-superior {
+  min-height: 88px;
+  padding: 18px 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e0ebe6;
+  background-color: white;
+}
+
+.barra-superior input {
+  width: 52%;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 10px;
+  outline: none;
+  background-color: #f1f6f4;
+  color: #173d31;
+  font-size: 15px;
+}
+
+.barra-superior input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 154, 93, 0.15);
+}
+
+.perfil {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.foto-perfil {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background-color: #087b55;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.perfil div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.perfil strong {
+  color: #143a2e;
+  font-size: 15px;
+}
+
+.perfil span {
+  color: #74847d;
+  font-size: 13px;
+}
+
+.conteudo-principal {
+  padding: 36px 42px;
+}
+
+.conteudo-principal h2 {
+  color: #133a2d;
+  font-size: 28px;
+}
+
+.conteudo-principal p {
+  margin-top: 8px;
+  color: #778981;
+  font-size: 16px;
+}
