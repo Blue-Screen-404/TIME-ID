@@ -2,7 +2,7 @@
 
 Sistema Inteligente de Gestão de Pessoas, Controle de Jornada e Segurança Corporativa.
 
-**Para iniciar o login temporário, siga [Executar e testar o backend](#executar-e-testar-o-backend).**
+**Para iniciar o React e a API C# juntos, siga [Executar o sistema integrado](#executar-o-sistema-integrado).**
 
 ---
 
@@ -82,7 +82,7 @@ TIME-ID/
 └── anotacoes.txt
 ```
 
-O projeto está em fase inicial. O backend usa C# e .NET, e o frontend será desenvolvido em React. O backend possui uma API de login temporário funcional; o frontend será integrado a partir de outro projeto.
+O projeto está em fase inicial. A tela React está integrada à API de autenticação em C#/.NET. O ASP.NET serve o frontend compilado e a API no mesmo endereço. O usuário de demonstração permanece em memória; ainda não há banco de dados nem cadastro de usuários.
 
 Pastas vazias não são versionadas pelo Git. O backend possui DTOs, serviço de autenticação e controller de login implementados. As pastas geradas `bin/` e `obj/` são ignoradas.
 
@@ -436,104 +436,74 @@ Blue-Screen-404
 
 Projeto acadêmico desenvolvido para a disciplina de desenvolvimento de software e evolução para uma plataforma inteligente de gestão de pessoas e segurança corporativa.
 
-# fazer o sistema funcionar APP
+# Executar o sistema integrado
 
-TIMEID — Frontend
+Este passo a passo é para quem quer baixar o projeto, abrir a tela de login e testar o sistema no próprio computador. Você usará **um terminal e um navegador**.
 
-Interface web do sistema TIMEID, desenvolvida com React e Vite.
+**Para executar a versão pronta, basta o .NET. Não é necessário instalar Node.js nem executar comandos npm.** O backend C# entrega a interface React já preparada e atende às solicitações de login no mesmo endereço.
 
-Pré-requisitos
+## 1. Confira o que precisa estar instalado
 
-Antes de iniciar, instale:
+- **SDK .NET 8.0.425**, ou um patch posterior da mesma faixa 8.0.4xx, conforme o arquivo `global.json`. Instale o **SDK**, que permite compilar o código; apenas o runtime não basta para este passo a passo.
+- **Um navegador**, como Edge, Chrome ou Firefox.
+- **VS Code**, se quiser seguir as instruções de abertura abaixo. Você também pode usar um terminal PowerShell diretamente.
 
-Node.js 22 LTS
+Na primeira execução, mantenha a conexão com a internet disponível para o .NET restaurar as dependências, caso seja necessário.
 
-GitHub Desktop ou Git
+## 2. Abra a pasta principal do projeto
 
-O Node.js já instala o npm automaticamente. Após a instalação, confirme no terminal:
+Se baixou um ZIP, extraia os arquivos antes de começar. Se usa GitHub Desktop, abra a pasta do repositório baixado.
 
-node --version
-npm --version
+No VS Code:
 
-Use Node.js 20.19 ou superior.
+1. Clique em **Arquivo > Abrir Pasta** (*File > Open Folder*).
+2. Selecione a pasta principal do projeto, que contém `README.md`, `global.json` e `TIME-ID_OFC`.
+3. Clique em **Terminal > Novo Terminal** (*Terminal > New Terminal*).
+4. Se houver opção de terminal, escolha **PowerShell**.
 
-Baixar o projeto
+Você deve estar nesta estrutura:
 
-Pelo GitHub Desktop
+```text
+TIME-ID/                   ← execute os comandos nesta pasta
+├── README.md
+├── global.json
+├── scripts/
+└── TIME-ID_OFC/
+    ├── Time-ID_backend/
+    └── Time-ID_frontend/
+```
 
-Abra o GitHub Desktop e faça login.
+Para conferir a pasta atual, digite no terminal e pressione Enter:
 
-Clique em File → Clone repository.
+```powershell
+Get-Location
+Get-ChildItem
+```
 
-Selecione o repositório TIME-ID.
+A listagem deve mostrar `README.md`, `global.json` e `TIME-ID_OFC`. Se esses itens não aparecerem, abra a pasta correta antes de continuar. Não entre na pasta do frontend para executar os comandos abaixo.
 
-Escolha a pasta onde o projeto será salvo e clique em Clone.
+## 3. Confira se o .NET está disponível
 
-No GitHub Desktop, clique em Repository → Open in Terminal.
-
-Pelo terminal
-
-git clone https://github.com/Blue-Screen-404/TIME-ID.git
-cd TIME-ID
-
-Instalar as dependências
-
-Entre na pasta do frontend:
-
-cd TIME-ID_OFC/Time-ID_frontend
-
-Instale as bibliotecas do projeto, incluindo React e Vite:
-
-npm install
-
-Esse comando é necessário apenas na primeira execução ou quando as dependências forem atualizadas.
-E caso ele não funcione ou gere um erro, selecione no terminal do vscode a seta para baixo e exeute o command prompt e ali tente exeutar o comando novamente.
-
-Iniciar o frontend
-
-Ainda na pasta Time-ID_frontend, execute:
-
-npm run dev
-
-O Vite mostrará um endereço parecido com este:
-
-http://localhost:5173/
-
-Abra o endereço informado no navegador. Mantenha o terminal aberto enquanto estiver usando o projeto.
-
-Para encerrar o servidor, pressione Ctrl + C no terminal.
-
-
-
-# Executar e testar o backend
-
-O backend é uma **API feita em .NET 8**. Ele roda no seu computador e recebe pedidos pelo endereço **http://localhost:5000**. Esse endereço não é um frontend React nem um site publicado. Nesta etapa, você testa o login pelo PowerShell; ainda não há uma tela com campos de e-mail e senha.
-
-Você usará **dois terminais**:
-- **Terminal 1:** mantém o backend ligado.
-- **Terminal 2:** envia o e-mail e a senha e testa a sessão.
-
-## 1. Abra a pasta certa
-
-No VS Code, abra a pasta principal TIME-ID, que contém este README, global.json e a pasta TIME-ID_OFC. Depois abra **Terminal > Novo Terminal** e escolha **PowerShell**.
-
-## 2. Confira o .NET
+No mesmo terminal, execute:
 
 ```powershell
 dotnet --version
 ```
 
-O global.json seleciona o SDK **8.0.425**, permitindo atualizações de patch da mesma faixa. Se o comando informar que o SDK não foi encontrado, instale essa versão do **SDK .NET**, não apenas o runtime. Para executar somente o backend, você não precisa de Node.js, npm ou React.
+O resultado deve ser uma versão compatível com o `global.json`, como `8.0.425`.
 
-## 3. Inicie o backend no Terminal 1
+- Se aparecer **“dotnet não é reconhecido”**, instale o SDK .NET e reabra o VS Code ou o terminal.
+- Se aparecer **“SDK não encontrado”** ou **“A compatible .NET SDK was not found”**, confira as versões instaladas com `dotnet --list-sdks` e instale uma versão compatível. Ter apenas o SDK de outra versão principal não atende à configuração deste projeto.
 
-Se ele já estiver rodando em outro terminal, pare a execução anterior com **Ctrl+C** antes de continuar. Se iniciou pelo depurador do VS Code, use **Shift+F5**.
+## 4. Inicie o sistema
+
+Copie este comando inteiro para o terminal, na pasta principal, e pressione Enter:
 
 ```powershell
-dotnet run --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj --urls http://localhost:5000
+dotnet run --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
 ```
 
-Esse comando restaura as dependências, compila e inicia o backend. Não é preciso executar dotnet build separadamente para iniciar.
+Esse comando faz três coisas: prepara as dependências .NET, compila o código C# e inicia o servidor que entrega a tela e a API. Você não precisa executar `dotnet build` separadamente.
 
 Aguarde uma mensagem semelhante a:
 
@@ -542,110 +512,128 @@ Now listening on: http://localhost:5000
 Application started. Press Ctrl+C to shut down.
 ```
 
-**Deixe esse terminal aberto.** Ele permanece ocupado enquanto o servidor está funcionando; isso é esperado. Não execute novamente o comando em outro terminal.
+**Deixe esse terminal aberto.** Ele fica ocupado enquanto o sistema está funcionando; isso é esperado. Não execute o comando novamente em outro terminal.
 
-Opcionalmente, abra http://localhost:5000 no navegador. Você verá informações da API em JSON, não um formulário de login.
+A porta `5000` já está definida em `Time-ID_backend/Properties/launchSettings.json`. Não é preciso iniciar um segundo servidor para o frontend.
 
-## 4. Faça login no Terminal 2
+## 5. Abra a tela e faça login
 
-Abra outro terminal PowerShell pelo botão **+** do painel de terminais. Mantenha o Terminal 1 funcionando.
+Abra o navegador e digite este endereço na barra de endereços:
 
-Use o usuário temporário:
+**[http://localhost:5000](http://localhost:5000)**
 
-| Campo | Valor |
+`localhost` significa o seu próprio computador. O endereço funciona enquanto o servidor iniciado no passo anterior estiver ligado; ele não é um site publicado na internet.
+
+Você deve ver a tela de login do TIMEID. Preencha:
+
+| Campo | O que digitar |
 |---|---|
-| E-mail | teste@timeid.local |
-| Senha | TimeId@123 |
+| E-mail | `teste@timeid.local` |
+| Senha | `TimeId@123` |
 
-Copie o bloco inteiro abaixo para o Terminal 2:
+Clique em **Entrar**. A senha deve ser digitada exatamente como está na tabela, respeitando maiúsculas e minúsculas.
 
-```powershell
-$credenciais = @{
-    email = "teste@timeid.local"
-    password = "TimeId@123"
-} | ConvertTo-Json
+Se funcionar, a tela mostrará o nome do usuário, o e-mail, a mensagem **“Login realizado com sucesso.”** e o botão **Sair**. Esta versão demonstra a autenticação; os outros módulos ainda não estão implementados.
 
-Invoke-RestMethod -Uri "http://localhost:5000/api/auth/login" -Method Post -ContentType "application/json" -Body $credenciais -SessionVariable sessao
-```
+Para conferir o fluxo:
 
-Se funcionar, aparecerão os campos **id**, **username** e **email**. O comando guarda o cookie de autenticação na variável **$sessao** para os próximos passos.
+1. Recarregue a página: a sessão válida deve manter o usuário conectado.
+2. Clique em **Sair**: o formulário de login deve reaparecer.
+3. Tente entrar com uma senha incorreta: a tela deve informar que o e-mail ou a senha são inválidos.
 
-A senha diferencia maiúsculas de minúsculas e não remove espaços. O e-mail ignora diferenças de maiúsculas/minúsculas e espaços nas extremidades.
+O usuário é de demonstração e fica na memória, sem banco de dados. Ao reiniciar o backend, a sessão anterior deixa de valer e você precisa fazer login novamente.
 
-## 5. Confira se está autenticado
+## 6. Encerre ou execute novamente
 
-No **mesmo Terminal 2**, execute:
+Para **desligar o sistema**, volte ao terminal onde executou `dotnet run` e pressione **Ctrl+C**. Aguarde o terminal voltar a aceitar comandos. Fechar apenas a aba do navegador não encerra o servidor.
 
-```powershell
-Invoke-RestMethod -Uri "http://localhost:5000/api/auth/me" -WebSession $sessao
-```
+Para **executar outro dia**, abra novamente a pasta principal e repita o comando do passo 4. Depois acesse o endereço do passo 5. Não é necessário reinstalar o SDK a cada execução.
 
-A API deve devolver os dados do usuário. Sem o cookie da sessão, essa rota retorna **401**.
+Se alterar o código C#, pare o servidor com Ctrl+C e execute o comando novamente para compilar e usar a alteração.
 
-## 6. Faça logout
+## Se algo não funcionar
 
-Ainda no Terminal 2:
-
-```powershell
-Invoke-RestMethod -Uri "http://localhost:5000/api/auth/logout" -Method Post -WebSession $sessao
-```
-
-O logout retorna **204**, sem texto no corpo da resposta. Isso é sucesso, não uma falha.
-
-Se repetir o comando do passo 5 após sair, o PowerShell mostrará **401 (Unauthorized)**. Esse resultado é esperado: você já encerrou a sessão. Para entrar novamente, repita o passo 4.
-
-## 7. Pare o backend antes de recompilar ou executar novamente
-
-Volte ao **Terminal 1** e pressione **Ctrl+C**. Aguarde o prompt do PowerShell reaparecer.
-
-Para iniciar de novo, repita o passo 3. Reiniciar o backend invalida os cookies anteriores, então repita também o login do passo 4.
-
-## Solução do erro MSB3021: arquivo em uso
-
-A mensagem "apphost.exe ... TIME-ID_OFC.exe ... being used by another process" significa que uma instância anterior ainda está usando o executável que a compilação tenta substituir.
-
-1. Pare o backend com **Ctrl+C** no terminal onde ele foi iniciado, ou **Shift+F5** se estiver depurando.
-2. Aguarde a execução terminar.
-3. Execute novamente o comando do passo 3.
-
-Se você perdeu o terminal original e o processo continuou aberto, execute este bloco **na raiz do repositório**. Ele encerra somente processos cujo caminho corresponde ao executável deste backend:
-
-```powershell
-$executavel = Join-Path (Get-Location).Path "TIME-ID_OFC/Time-ID_backend/bin/Debug/net8.0/TIME-ID_OFC.exe"
-Get-Process -Name TIME-ID_OFC -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -eq $executavel } |
-    Stop-Process -Force
-```
-
-Depois repita o passo 3. Se aparecer "Acesso negado", encerre pelo terminal/depurador original ou execute esse mesmo bloco em um PowerShell como administrador, entrando antes na pasta do projeto. Encerrar o backend invalida as sessões temporárias.
-
-Não é necessário apagar bin/obj, reinstalar o .NET ou remover as validações de login para resolver esse bloqueio.
-
-## Outros resultados comuns
-
-| Resultado | Significado / ação |
+| O que aconteceu | O que fazer |
 |---|---|
-| Conexão recusada | O backend não está ligado. Verifique o Terminal 1 e aguarde a mensagem de inicialização. |
-| Porta 5000 em uso | Já existe um servidor nessa porta. Pare a instância anterior; não inicie duas cópias na mesma porta. |
-| 400 no login | Verifique campos obrigatórios, formato do e-mail e JSON enviado. |
-| 401 no login | E-mail/senha incorretos ou usuário inativo. |
-| 401 em /api/auth/me | Faça login e envie $sessao no mesmo terminal; a sessão também pode ter expirado. |
-| 404 em /api/employees | A API de cadastro foi removida. Nesta etapa, use /api/auth/login, /me e /logout. |
+| “O arquivo de projeto não existe” ou `MSB1009` | Confira se o terminal está na pasta que contém `TIME-ID_OFC` e copie o comando completo do passo 4. |
+| “dotnet não é reconhecido” | Instale o SDK .NET e reabra o terminal. |
+| “A compatible .NET SDK was not found” | Confira o passo 3 e a versão exigida no `global.json`. |
+| Porta 5000 em uso ou “address already in use” | Verifique se o sistema já está aberto em outro terminal. Encerre a execução anterior com Ctrl+C antes de iniciar outra. |
+| Arquivo em uso ao compilar, `MSB3021` ou `MSB3027` | Pare a execução anterior com Ctrl+C. Se iniciou pelo depurador do VS Code, use Shift+F5. Depois repita o passo 4. |
+| O navegador informa “conexão recusada” | Confira se o terminal continua aberto e se apareceu “Now listening on”. Use `http://localhost:5000`, conforme configurado. |
+| Aparece JSON em vez da tela | Abra `/`, ou seja, `http://localhost:5000`. O endereço `/api` mostra informações técnicas da API. |
+| A página inicial retorna 404 | Confira se `Time-ID_backend/wwwroot/index.html` e a pasta `wwwroot/assets` vieram junto com o projeto. Eles contêm a interface pronta. |
+| E-mail ou senha inválidos | Use as credenciais do passo 5. Não acrescente espaços na senha. |
+| A sessão deixou de funcionar | Faça login novamente. A sessão expira em até 30 minutos e também é invalidada ao reiniciar o backend. |
 
-## Armazenamento e duração da sessão
+**Os passos acima são suficientes para executar e testar a tela.** As próximas seções explicam a integração e tarefas opcionais de desenvolvimento.
 
-O usuário de demonstração é recriado em memória a cada execução. Não há banco de dados nem cadastro de usuários nesta etapa. A senha é verificada por hash com PasswordHasher<User>; respostas nunca incluem a senha nem o hash.
+## Como a integração funciona
 
-A sessão usa cookie HttpOnly, SameSite=Strict, não persistente, com validade de até 30 minutos e sem renovação automática. HTTPS utiliza Secure; HTTP é permitido para o teste local. Os cookies deixam de funcionar ao reiniciar o backend. As credenciais documentadas são públicas e destinadas apenas à demonstração local.
+1. O navegador solicita `/`. `UseDefaultFiles` seleciona `index.html` e `UseStaticFiles` entrega os arquivos compilados de `wwwroot`.
+2. Ao abrir a tela, React chama `GET /api/auth/me`. Uma sessão válida recupera o usuário; `401` mostra o formulário.
+3. Ao enviar o formulário, `src/services/auth.js` faz `fetch` para `POST /api/auth/login` com JSON contendo `email` e `password`.
+4. O ASP.NET valida `LoginRequest`. `AuthController` chama `AuthenticationService`, que compara o e-mail e verifica o hash da senha do objeto `User` em memória.
+5. Quando as credenciais são válidas, o backend retorna os dados do usuário e envia o cookie `TimeId.Session`. A senha e o hash não são retornados.
+6. O navegador guarda e envia o cookie nas próximas chamadas. O React usa `credentials: "same-origin"`; não guarda senha nem token no localStorage.
+7. O botão Sair chama `POST /api/auth/logout`; o backend expira o cookie e o React volta ao formulário.
 
-## Teste automatizado (opcional)
+Frontend e API usam a mesma origem (protocolo, host e porta), portanto esse modo não precisa configurar CORS. O React não faz a validação real da senha; ela permanece no C#.
 
-Pare o backend antes de executar o teste, pois ele também precisa compilar o projeto. Com a porta 5099 livre e o terminal na raiz:
+| Método | Endereço | Resultado |
+|---|---|---|
+| GET | `/` | Interface React |
+| GET | `/api` | Informações da API em JSON |
+| POST | `/api/auth/login` | `200` com usuário e cookie; `400` para entrada inválida; `401` para credenciais incorretas |
+| GET | `/api/auth/me` | `200` com usuário autenticado ou `401` sem sessão válida |
+| POST | `/api/auth/logout` | `204` após sair; exige autenticação |
+
+A senha diferencia maiúsculas, minúsculas e espaços. O e-mail ignora caixa e espaços nas extremidades. A sessão usa cookie HttpOnly, SameSite=Strict, não persistente, com validade de até 30 minutos e sem renovação automática. HTTPS gera cookie Secure; HTTP é permitido na demonstração local. Reiniciar o backend recria o usuário e invalida as sessões anteriores. As credenciais são públicas e destinadas a testes locais.
+
+## Alterar o código-fonte React (somente desenvolvimento do frontend)
+
+O backend continua exclusivamente em C# e a execução normal exige apenas .NET. O código-fonte React foi preservado em `Time-ID_frontend`.
+
+Se um desenvolvedor alterar JSX, CSS ou imagens nessa pasta, precisará atualizar a versão pronta em `wwwroot`. As ferramentas atuais para essa tarefa são Node/npm/Vite:
+
+```powershell
+npm.cmd ci --prefix ./TIME-ID_OFC/Time-ID_frontend
+npm.cmd run build --prefix ./TIME-ID_OFC/Time-ID_frontend
+```
+
+Esses comandos não são necessários para executar o sistema nem para alterar apenas o backend C#. O Vite substitui o conteúdo gerado de `wwwroot`; não coloque arquivos manuais nessa pasta. Inclua o código-fonte alterado e os arquivos gerados no mesmo commit para que quem baixar o projeto execute apenas com .NET.
+
+## Teste automatizado da API (opcional)
+
+Este teste é para quem está desenvolvendo o projeto; não é necessário para abrir a tela de login.
+
+Pare o backend com Ctrl+C e, na pasta principal do projeto, execute:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ./scripts/Test-Login.ps1
 ```
 
-O teste compila, inicia sua própria instância, verifica login, validações, sessão, logout e reinício e encerra essa instância ao terminar. O resultado esperado é **Todos os testes passaram**.
+O teste usa a porta `5099`, que deve estar livre. Ele compila o projeto, inicia sua própria instância e verifica entradas inválidas, login, cookies, consulta do usuário, logout e invalidação após reiniciar. Ao terminar, encerra apenas a instância de teste.
 
-Para rodar o backend, execute na raiz do repositório: `dotnet run --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj --urls http://localhost:5000`; para parar, pressione Ctrl+C no mesmo terminal.
+O resultado esperado é **“Todos os testes passaram.”** Para abrir a interface depois, execute novamente o comando do passo 4.
+
+## Gerar uma versão de distribuição (opcional)
+
+Esta etapa prepara uma pasta com o sistema pronto para execução. Ela não é necessária para trabalhar no projeto com `dotnet run`.
+
+Na pasta principal, execute:
+
+```powershell
+dotnet publish ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj -c Release -o ./artifacts/time-id
+```
+
+Depois entre na pasta gerada e inicie o sistema:
+
+```powershell
+cd ./artifacts/time-id
+dotnet TIME-ID_OFC.dll --urls http://localhost:5000
+```
+
+O .NET inclui a interface de `wwwroot` na publicação, sem executar Node/npm. Para executar essa distribuição, o computador precisa do runtime **ASP.NET Core 8**. Mantenha a pasta publicada completa, incluindo `wwwroot`, e execute a DLL de dentro dela.
+
+A porta é informada nesse comando porque `launchSettings.json` é usado no desenvolvimento, não na execução da distribuição. Pare qualquer instância anterior na porta 5000 antes de iniciar. Para encerrar, use Ctrl+C.

@@ -50,9 +50,11 @@ public class Program
         builder.Services.AddAuthorization();
 
         WebApplication app = builder.Build();
+        app.UseDefaultFiles();
+        app.UseStaticFiles();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.MapGet("/", () => Results.Ok(new
+        app.MapGet("/api", () => Results.Ok(new
         {
             application = "TIME-ID API",
             mode = "Login temporário com usuário em memória",

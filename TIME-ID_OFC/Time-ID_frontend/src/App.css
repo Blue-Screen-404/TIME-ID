@@ -130,7 +130,7 @@ body {
   transform: translateY(-50%);
 }
 
-.card-login input[type="text"],
+.card-login input[type="email"],
 .card-login input[type="password"] {
   width: 100%;
   padding: 20px 20px 20px 48px;
@@ -141,7 +141,7 @@ body {
   outline: none;
 }
 
-.card-login input[type="text"]:focus,
+.card-login input[type="email"]:focus,
 .card-login input[type="password"]:focus {
   border-color: #00a661;
   box-shadow: 0 0 0 3px rgba(0, 166, 97, 0.12);
@@ -239,7 +239,7 @@ body {
     font-size: 16px;
   }
 
-  .card-login input[type="text"],
+  .card-login input[type="email"],
   .card-login input[type="password"] {
     padding: 17px 16px 17px 46px;
     font-size: 16px;
@@ -272,3 +272,6 @@ body {
     font-size: 17px;
   }
 }
+.card-login .mensagem-erro { color: #a32222; font-size: 16px; }
+.card-login button:disabled { opacity: 0.65; cursor: wait; }
+.sessao-usuario p { margin: 20px 0; text-align: center; overflow-wrap: anywhere; }

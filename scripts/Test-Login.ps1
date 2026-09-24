@@ -21,7 +21,7 @@ function Start-TestServer {
             throw "Backend encerrado. Consulte $stdout e $stderr."
         }
         try {
-            $response = Invoke-WebRequest "$baseUrl/" -UseBasicParsing -TimeoutSec 1
+            $response = Invoke-WebRequest "$baseUrl/api" -UseBasicParsing -TimeoutSec 1
             if ($response.StatusCode -eq 200) { return }
         } catch { }
         Start-Sleep -Milliseconds 250

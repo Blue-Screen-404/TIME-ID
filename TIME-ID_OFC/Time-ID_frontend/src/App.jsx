@@ -1,8 +1,52 @@
+import { useEffect, useState } from "react";
+import { login, getCurrentUser, logout } from "./services/auth";
 import "./App.css";
 import iconeUsuario from "./assets/icone-usuario.png";
 import iconeSenha from "./assets/icone-senha.png";
 
 function App() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    getCurrentUser()
+      .then((currentUser) => { if (active) setUser(currentUser); })
+      .catch((err) => { if (active) setError(err.message); })
+      .finally(() => { if (active) setBusy(false); });
+    return () => { active = false; };
+  }, []);
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const currentUser = await login(email, password);
+      setUser(currentUser);
+      setPassword("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLogout() {
+    setBusy(true);
+    setError("");
+    try {
+      await logout();
+      setUser(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <main className="pagina-login">
       <section className="lado-esquerdo">
@@ -39,17 +83,29 @@ function App() {
             </h1>
           </div>
 
+          {error && <p className="mensagem-erro" role="alert">{error}</p>}
+          {user ? (
+            <section className="sessao-usuario" aria-label="Sessão do usuário">
+              <h2>Bem-vindo, {user.username}!</h2>
+              <p>{user.email}</p>
+              <p>Login realizado com sucesso.</p>
+              <button type="button" onClick={handleLogout} disabled={busy}>
+                {busy ? "Aguarde..." : "Sair"}
+              </button>
+            </section>
+          ) : (
+          <>
           <h2>Bem-vindo!</h2>
 
           <p>Faça seu login para acessar o sistema.</p>
 
-          <form>
+          <form onSubmit={handleLogin}>
             <div className="campo-login">
               <img src={iconeUsuario} alt="" />
 
               <input
-                type="text"
-                placeholder="Usuário ou e-mail"
+                type="email" name="email" aria-label="E-mail" autoComplete="username" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} disabled={busy}
+                placeholder="E-mail"
               />
             </div>
 
@@ -57,22 +113,17 @@ function App() {
               <img src={iconeSenha} alt="" />
 
               <input
-                type="password"
+                type="password" name="password" aria-label="Senha" autoComplete="current-password" required maxLength={256} value={password} onChange={(event) => setPassword(event.target.value)} disabled={busy}
                 placeholder="Senha"
               />
             </div>
 
-            <div className="opcoes-login">
-              <label>
-                <input type="checkbox" />
-                Lembrar de mim
-              </label>
 
-              <a href="/">Esqueceu a senha?</a>
-            </div>
 
-            <button type="button">Entrar</button>
+            <button type="submit" disabled={busy}>{busy ? "Aguarde..." : "Entrar"}</button>
           </form>
+          </>
+          )}
         </div>
       </section>
     </main>
