@@ -4,10 +4,26 @@ import "./App.css";
 import iconeUsuario from "./assets/icone-usuario.png";
 import iconeSenha from "./assets/icone-senha.png";
 import Inicio from "./pages/Inicio";
+import Cadastro from "./pages/Cadastro";
 
 function App() {
-  const estaNaPaginaInicial =
-    window.location.pathname !== "/login";
+  const [paginaAtual, setPaginaAtual] = useState(() => {
+    const caminho = window.location.pathname;
+
+    if (caminho === "/cadastro") {
+      return "cadastro";
+    }
+
+    if (caminho === "/login") {
+      return "login";
+    }
+
+    return "inicio";
+  });
+
+  const estaNaPaginaInicial = paginaAtual === "inicio";
+  const estaNaPaginaCadastro = paginaAtual === "cadastro";
+  const estaNaPaginaLogin = paginaAtual === "login";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,8 +31,19 @@ function App() {
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
 
+  function navegar(para) {
+    const caminhos = {
+      inicio: "/",
+      cadastro: "/cadastro",
+      login: "/login",
+    };
+
+    window.history.pushState({}, "", caminhos[para]);
+    setPaginaAtual(para);
+  }
+
   useEffect(() => {
-    if (estaNaPaginaInicial) {
+    if (!estaNaPaginaLogin) {
       setBusy(false);
       return;
     }
@@ -37,7 +64,7 @@ function App() {
     return () => {
       active = false;
     };
-  }, [estaNaPaginaInicial]);
+  }, [estaNaPaginaLogin]);
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -70,8 +97,12 @@ function App() {
     }
   }
 
+  if (estaNaPaginaCadastro) {
+    return <Cadastro aoNavegar={navegar} />;
+  }
+
   if (estaNaPaginaInicial) {
-    return <Inicio />;
+    return <Inicio aoNavegar={navegar} />;
   }
 
   return (
