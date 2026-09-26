@@ -1,9 +1,10 @@
-param([int]$Port = 5099)
+﻿param([int]$Port = 5099)
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
 $project = Join-Path $root "TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj"
-$dll = Join-Path $root "TIME-ID_OFC/Time-ID_backend/bin/Debug/net8.0/TIME-ID_OFC.dll"
+$testOutput = Join-Path $root "artifacts/tests"
+$dll = Join-Path $testOutput "TIME-ID_OFC.dll"
 $baseUrl = "http://localhost:$Port"
 $script:serverProcess = $null
 $logPrefix = Join-Path ([System.IO.Path]::GetTempPath()) ("timeid-login-" + [guid]::NewGuid())
@@ -15,7 +16,7 @@ function Start-TestServer {
     $stderr = "$logPrefix-$script:runNumber.err.log"
     $script:serverProcess = Start-Process dotnet -ArgumentList @(
         ('"' + $dll + '"'), "--urls", $baseUrl
-    ) -PassThru -WindowStyle Hidden -WorkingDirectory $root -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    ) -PassThru -WindowStyle Hidden -WorkingDirectory (Split-Path $project -Parent) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     for ($attempt = 0; $attempt -lt 120; $attempt++) {
         if ($script:serverProcess.HasExited) {
             throw "Backend encerrado. Consulte $stdout e $stderr."
@@ -60,7 +61,7 @@ function Assert-Request($label, $method, $path, $body, $session, $expected) {
 
 Push-Location $root
 try {
-    & dotnet build $project --no-incremental -warnaserror -v minimal
+    & dotnet build $project --no-incremental -warnaserror -v minimal -o $testOutput
     if ($LASTEXITCODE -ne 0) { throw "Falha na compilacao." }
 
     # Garante que os testes nao usem uma API preexistente nessa porta.
@@ -86,7 +87,37 @@ try {
     if ($null -eq $cookie -or !$cookie.HttpOnly -or $response.Headers["Set-Cookie"] -notmatch "samesite=strict") {
         throw "Cookie de sessao ausente ou sem atributos esperados."
     }
+    foreach ($path in @("/inicio", "/cadastro")) {
+        $page = Assert-Request "Interface React $path" GET $path $null $session 200
+        if ($page.Content -notmatch 'id="root"' -or $page.Content -notmatch '/assets/') { throw "Interface React ausente." }
+    }
     $null = Assert-Request "Rota protegida" GET "/api/auth/me" $null $session 200
+    # Permissoes verificadas no servidor, inclusive contra requests manuais.
+    $anonymous = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    $null = Assert-Request "Perfil exige sessao" PUT "/api/auth/profile" '{}' $anonymous 401
+    $response = Assert-Request "Administrador edita perfil" PUT "/api/auth/profile" '{"username":"Admin atualizado","email":"admin@timeid.local","photoUrl":null}' $session 200
+    $profile = $response.Content | ConvertFrom-Json
+    if ($profile.username -ne "Admin atualizado" -or $profile.role -ne "Administrador") { throw "Perfil atualizado incorreto." }
+    $response = Assert-Request "Perfil atualizado persiste na sessao" GET "/api/auth/me" $null $session 200
+    if (($response.Content | ConvertFrom-Json).email -ne "admin@timeid.local") { throw "Email nao atualizado." }
+    $null = Assert-Request "Email duplicado rejeitado" PUT "/api/auth/profile" '{"email":"usuario@timeid.local"}' $session 400
+    $null = Assert-Request "Nome vazio rejeitado" PUT "/api/auth/profile" '{"username":"  "}' $session 400
+    $null = Assert-Request "Alteracao de papel rejeitada" PUT "/api/auth/profile" '{"role":"Administrador"}' $session 400
+    $null = Assert-Request "Restaurar perfil demo" PUT "/api/auth/profile" '{"username":"Usuario de teste","email":"teste@timeid.local","photoUrl":null}' $session 200
+    $regular = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    $response = Assert-Request "Login usuario comum" POST "/api/auth/login" '{"email":"usuario@timeid.local","password":"TimeId@123"}' $regular 200
+    if (($response.Content | ConvertFrom-Json).role -eq "Administrador") { throw "Usuario recebeu privilegio incorreto." }
+    $null = Assert-Request "Usuario nao edita nome" PUT "/api/auth/profile" '{"username":"Outro nome"}' $regular 403
+    $null = Assert-Request "Usuario nao edita email" PUT "/api/auth/profile" '{"email":"outro@timeid.local"}' $regular 403
+    $null = Assert-Request "Imagem invalida rejeitada" PUT "/api/auth/profile" '{"photoUrl":"data:image/svg+xml;base64,PHN2Zz4="}' $regular 400
+    $photo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1kAAAAASUVORK5CYII="
+    $photoBody = @{ photoUrl = $photo } | ConvertTo-Json -Compress
+    $response = Assert-Request "Usuario altera foto" PUT "/api/auth/profile" $photoBody $regular 200
+    $profile = $response.Content | ConvertFrom-Json
+    if ($profile.photoUrl -ne $photo -or $profile.email -ne "usuario@timeid.local" -or $profile.username -ne "Usuario comum") { throw "Atualizacao de foto alterou outros dados." }
+    $response = Assert-Request "Foto persistiu" GET "/api/auth/me" $null $regular 200
+    if (($response.Content | ConvertFrom-Json).photoUrl -ne $photo) { throw "Foto nao persistiu." }
+    $null = Assert-Request "Remover foto" PUT "/api/auth/profile" '{"photoUrl":null}' $regular 200
     $null = Assert-Request "Logout" POST "/api/auth/logout" $null $session 204
     $null = Assert-Request "Sessao encerrada" GET "/api/auth/me" $null $session 401
     $null = Assert-Request "Email sem diferenciar caixa" POST "/api/auth/login" '{"email":"TESTE@TIMEID.LOCAL","password":"TimeId@123"}' $session 200

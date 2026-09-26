@@ -258,3 +258,5 @@ body {
     font-size: 17px;
   }
 }
+.carregando-sessao { padding: 48px; text-align: center; color: #003d2c; }
+.erro-sessao { padding: 16px; color: #a32222; background: #fff0f0; }

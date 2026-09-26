@@ -1,3 +1,5 @@
+import ProfileMenu from "../components/ProfileMenu";
+import Sidebar from "../components/Sidebar";
 import "./Inicio.css";
 import {
   ArrowRight,
@@ -15,42 +17,10 @@ import {
   Users,
 } from "lucide-react";
 
-function Inicio({ aoNavegar }) {
+function Inicio({ aoNavegar, aoSair, user, busy, onUpdateProfile }) {
   return (
     <main className="dashboard">
-      <aside className="menu-lateral">
-        <h1>
-          TIME<span>ID</span>
-        </h1>
-
-        <nav>
-          <a className="menu-ativo" href="/">
-            Início
-          </a>
-
-          <a href="/">Ponto</a>
-          <a href="/">Funcionários</a>
-
-          <a
-            href="/cadastro"
-            onClick={(event) => {
-              event.preventDefault();
-              aoNavegar("cadastro");
-            }}
-          >
-            Cadastrar
-          </a>
-
-          <a href="/">Listar</a>
-          <a href="/">Departamentos</a>
-          <a href="/">Relatórios</a>
-          <a href="/">Férias</a>
-          <a href="/">Feriados</a>
-          <a href="/">Configurações</a>
-        </nav>
-
-        <footer>TIMEID v1.0.0</footer>
-      </aside>
+      <Sidebar pagina="inicio" aoNavegar={aoNavegar} aoSair={aoSair} busy={busy} />
 
       <section className="conteudo-dashboard">
         <header className="barra-superior">
@@ -59,14 +29,7 @@ function Inicio({ aoNavegar }) {
             placeholder="Buscar funcionário, departamento..."
           />
 
-          <div className="perfil">
-            <div className="foto-perfil">GS</div>
-
-            <div>
-              <strong>Gabriel Silva</strong>
-              <span>Administrador</span>
-            </div>
-          </div>
+          <ProfileMenu user={user} onUpdate={onUpdateProfile} />
         </header>
 
         <section className="conteudo-principal">
@@ -77,7 +40,7 @@ function Inicio({ aoNavegar }) {
               </div>
 
               <div>
-                <h2>Olá, Gabriel!</h2>
+                <h2>Olá, {user.username}!</h2>
 
                 <p>
                   Aqui está um resumo da sua equipe. Continue assim!
@@ -89,7 +52,7 @@ function Inicio({ aoNavegar }) {
               <CalendarDays size={24} />
 
               <div>
-                <strong>Segunda-feira, 22 de Setembro de 2025</strong>
+                <strong>{new Date().toLocaleDateString("pt-BR", { dateStyle: "full" })}</strong>
                 <span>Bom dia! Tenha um ótimo dia!</span>
               </div>
             </div>

@@ -42,3 +42,16 @@ export function getCurrentUser() {
 export function logout() {
   return request("logout", { method: "POST" });
 }
+
+export async function updateProfile(profile) {
+  let response;
+  try {
+    response = await fetch("/api/auth/profile", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profile) });
+  } catch { throw new Error("Não foi possível conectar ao servidor. Suas alterações não foram salvas."); }
+  if (response.status === 401) throw new Error("Sua sessão expirou. Cancele e entre novamente para editar o perfil.");
+  if (!response.ok) {
+    const problem = await response.json().catch(() => null);
+    throw new Error(problem?.errors ? "Confira o nome, o e-mail e o tamanho da foto." : problem?.title ?? "Não foi possível salvar o perfil. Tente novamente.");
+  }
+  return response.json();
+}

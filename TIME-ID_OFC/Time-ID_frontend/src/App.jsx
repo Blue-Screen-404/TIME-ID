@@ -7,104 +7,66 @@ import Inicio from "./pages/Inicio";
 import Cadastro from "./pages/Cadastro";
 
 function App() {
-  const [paginaAtual, setPaginaAtual] = useState(() => {
-    const caminho = window.location.pathname;
-
-    if (caminho === "/cadastro") {
-      return "cadastro";
-    }
-
-    if (caminho === "/login") {
-      return "login";
-    }
-
-    return "inicio";
-  });
-
-  const estaNaPaginaInicial = paginaAtual === "inicio";
-  const estaNaPaginaCadastro = paginaAtual === "cadastro";
-  const estaNaPaginaLogin = paginaAtual === "login";
-
+  const [paginaAtual, setPaginaAtual] = useState(window.location.pathname);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
 
-  function navegar(para) {
-    const caminhos = {
-      inicio: "/",
-      cadastro: "/cadastro",
-      login: "/login",
-    };
-
-    window.history.pushState({}, "", caminhos[para]);
-    setPaginaAtual(para);
+  function navegar(para, replace = false) {
+    const path = { inicio: "/inicio", cadastro: "/cadastro", login: "/login" }[para];
+    window.history[replace ? "replaceState" : "pushState"]({}, "", path);
+    setPaginaAtual(path);
   }
 
   useEffect(() => {
-    if (!estaNaPaginaLogin) {
-      setBusy(false);
-      return;
-    }
-
     let active = true;
-
-    getCurrentUser()
-      .then((currentUser) => {
-        if (active) setUser(currentUser);
-      })
-      .catch((err) => {
-        if (active) setError(err.message);
-      })
-      .finally(() => {
-        if (active) setBusy(false);
-      });
-
+    async function checkSession() {
+      try {
+        const current = await getCurrentUser();
+        if (!active) return;
+        setUser(current);
+        if (!current) navegar("login", true);
+        else if (["/", "/login"].includes(window.location.pathname)) navegar("inicio", true);
+      } catch (err) {
+        if (active) { setUser(null); setError(err.message); navegar("login", true); }
+      } finally { if (active) setChecking(false); }
+    }
+    function onHistory() { setPaginaAtual(window.location.pathname); checkSession(); }
+    function onVisible() { if (document.visibilityState === "visible") checkSession(); }
+    checkSession();
+    const interval = window.setInterval(checkSession, 60000);
+    window.addEventListener("popstate", onHistory);
+    window.addEventListener("pageshow", onHistory);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("popstate", onHistory);
+      window.removeEventListener("pageshow", onHistory);
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [estaNaPaginaLogin]);
+  }, []);
 
   async function handleLogin(event) {
-    event.preventDefault();
-
-    setBusy(true);
-    setError("");
-
-    try {
-      const currentUser = await login(email, password);
-      setUser(currentUser);
-      setPassword("");
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    event.preventDefault(); setBusy(true); setError("");
+    try { setUser(await login(email, password)); setPassword(""); navegar("inicio", true); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
   }
-
   async function handleLogout() {
-    setBusy(true);
-    setError("");
-
-    try {
-      await logout();
-      setUser(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    setBusy(true); setError("");
+    try { await logout(); setUser(null); setPassword(""); navegar("login", true); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
   }
-
-  if (estaNaPaginaCadastro) {
-    return <Cadastro aoNavegar={navegar} />;
+  if (checking) return <main className="carregando-sessao" role="status">Verificando sessão...</main>;
+  if (user) {
+    const Page = paginaAtual === "/cadastro" ? Cadastro : Inicio;
+    return <>{error && <p className="erro-sessao" role="alert">{error}</p>}<Page onUpdateProfile={setUser} user={user} aoNavegar={navegar} aoSair={handleLogout} busy={busy} /></>;
   }
-
-  if (estaNaPaginaInicial) {
-    return <Inicio aoNavegar={navegar} />;
-  }
-
   return (
     <main className="pagina-login">
       <section className="lado-esquerdo">
@@ -141,29 +103,11 @@ function App() {
             </h1>
           </div>
 
-          {user ? (
-            <section
-              className="sessao-usuario"
-              aria-label="Sessão do usuário"
-            >
-              <h2>Bem-vindo, {user.username}!</h2>
-              <p>{user.email}</p>
-              <p>Login realizado com sucesso.</p>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={busy}
-              >
-                {busy ? "Aguarde..." : "Sair"}
-              </button>
-            </section>
-          ) : (
-            <>
               <h2>Bem-vindo!</h2>
 
               <p>Faça seu login para acessar o sistema.</p>
 
+              {error && <p className="mensagem-erro" role="alert">{error}</p>}
               <form onSubmit={handleLogin}>
                 <div className="campo-login">
                   <img src={iconeUsuario} alt="" />
@@ -203,8 +147,7 @@ function App() {
                   {busy ? "Aguarde..." : "Entrar"}
                 </button>
               </form>
-            </>
-          )}
+
         </div>
       </section>
     </main>

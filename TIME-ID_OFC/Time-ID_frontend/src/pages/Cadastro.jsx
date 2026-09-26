@@ -1,3 +1,5 @@
+import ProfileMenu from "../components/ProfileMenu";
+import Sidebar from "../components/Sidebar";
 import { useState } from "react";
 import "./Inicio.css";
 import "./Cadastro.css";
@@ -9,7 +11,7 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 
-function Cadastro({ aoNavegar }) {
+function Cadastro({ aoNavegar, aoSair, user, busy, onUpdateProfile }) {
   const [etapaAtual, setEtapaAtual] = useState(1);
 
   function proximaEtapa() {
@@ -27,45 +29,13 @@ function Cadastro({ aoNavegar }) {
   function finalizarCadastro(event) {
     event.preventDefault();
 
-    alert("Cadastro concluído com sucesso!");
+    alert("Demonstração concluída. Nenhum dado foi salvo e nenhum convite foi enviado.");
     aoNavegar("inicio");
   }
 
   return (
     <main className="dashboard">
-      <aside className="menu-lateral">
-        <h1>
-          TIME<span>ID</span>
-        </h1>
-
-        <nav>
-          <a
-            href="/"
-            onClick={(event) => {
-              event.preventDefault();
-              aoNavegar("inicio");
-            }}
-          >
-            Início
-          </a>
-
-          <a href="/">Ponto</a>
-          <a href="/">Funcionários</a>
-
-          <a className="menu-ativo" href="/cadastro">
-            Cadastrar
-          </a>
-
-          <a href="/">Listar</a>
-          <a href="/">Departamentos</a>
-          <a href="/">Relatórios</a>
-          <a href="/">Férias</a>
-          <a href="/">Feriados</a>
-          <a href="/">Configurações</a>
-        </nav>
-
-        <footer>TIMEID v1.0.0</footer>
-      </aside>
+      <Sidebar pagina="cadastro" aoNavegar={aoNavegar} aoSair={aoSair} busy={busy} />
 
       <section className="conteudo-dashboard">
         <header className="barra-superior">
@@ -74,14 +44,7 @@ function Cadastro({ aoNavegar }) {
             placeholder="Buscar funcionário, departamento..."
           />
 
-          <div className="perfil">
-            <div className="foto-perfil">GS</div>
-
-            <div>
-              <strong>Gabriel Silva</strong>
-              <span>Administrador</span>
-            </div>
-          </div>
+          <ProfileMenu user={user} onUpdate={onUpdateProfile} />
         </header>
 
         <main className="pagina-cadastro">
@@ -100,8 +63,7 @@ function Cadastro({ aoNavegar }) {
                 <h2>Cadastro de Funcionário</h2>
 
                 <p>
-                  Preencha os dados abaixo para cadastrar um novo
-                  colaborador no sistema.
+                  Formulário demonstrativo: os dados não serão salvos e nenhum convite será enviado.
                 </p>
               </div>
             </header>
@@ -313,7 +275,7 @@ function Cadastro({ aoNavegar }) {
                           </option>
 
                           <option value="gabriel">
-                            Gabriel Silva
+                            {user.username}
                           </option>
                         </select>
                       </label>
