@@ -9,6 +9,8 @@ public class User
 
     public required string PasswordHash { get; set; }
 
+    public string? PhotoUrl { get; set; }
+
     public Guid? EmployeeId { get; set; }
 
     public Employee? Employee { get; set; }

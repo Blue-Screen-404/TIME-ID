@@ -60,6 +60,27 @@ public class AuthController : ControllerBase
     }
 
     [Authorize]
+    [HttpPut("profile")]
+    [RequestSizeLimit(2900000)]
+    public ActionResult<LoginResponse> UpdateProfile(UpdateProfileRequest request)
+    {
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id)) return Unauthorized();
+        try
+        {
+            var profile = service.UpdateProfile(id, request);
+            return profile is null ? Unauthorized() : Ok(profile);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return Problem(statusCode: 403, title: exception.Message);
+        }
+        catch (ArgumentException exception)
+        {
+            return Problem(statusCode: 400, title: exception.Message);
+        }
+    }
+
+    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
