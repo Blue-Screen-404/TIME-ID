@@ -15,6 +15,13 @@ public class Program
         // Chaves temporárias: cookies deixam de valer ao reiniciar, sem gravar no perfil do Windows.
         builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
         builder.Services.AddSingleton<AuthenticationService>();
+        builder.Services.AddSingleton<InMemoryEmployeeRepository>();
+        builder.Services.AddSingleton<InMemoryDepartmentRepository>();
+        builder.Services.AddSingleton<InMemoryPositionRepository>();
+        builder.Services.AddSingleton<EmployeeService>();
+        builder.Services.AddSingleton<DepartmentService>();
+        builder.Services.AddSingleton<PositionService>();
+        builder.Services.AddSingleton<DashboardService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
