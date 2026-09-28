@@ -27,7 +27,10 @@ public class Program
                 options.SlidingExpiration = false;
                 options.Events.OnRedirectToLogin = context =>
                 {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    if (context.Request.Path.StartsWithSegments("/api"))
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    else
+                        context.Response.Redirect("/login");
                     return Task.CompletedTask;
                 };
                 options.Events.OnRedirectToAccessDenied = context =>
@@ -63,6 +66,17 @@ public class Program
             logout = "/api/auth/logout"
         }));
         app.MapControllers();
+        // Somente rotas da interface: URLs desconhecidas da API continuam retornando 404.
+        app.MapGet("/", () => Results.Redirect("/login"));
+        app.MapGet("/login", (HttpContext context) =>
+            context.User.Identity?.IsAuthenticated == true
+                ? Results.Redirect("/inicio")
+                : Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
+        foreach (string path in new[] { "/inicio", "/cadastro" })
+        {
+            app.MapGet(path, () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
+                .RequireAuthorization();
+        }
         app.Run();
     }
 }
