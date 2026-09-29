@@ -3,12 +3,12 @@ import { login, getCurrentUser, logout } from "./services/auth";
 import "./App.css";
 import iconeUsuario from "./assets/icone-usuario.png";
 import iconeSenha from "./assets/icone-senha.png";
-import Inicio from "./pages/Inicio";
-import Cadastro from "./pages/Cadastro";
+import Workspace from "./workspace/Workspace";
 
 function App() {
   const [paginaAtual, setPaginaAtual] = useState(window.location.pathname);
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -16,7 +16,7 @@ function App() {
   const [error, setError] = useState("");
 
   function navegar(para, replace = false) {
-    const path = { inicio: "/inicio", cadastro: "/cadastro", login: "/login" }[para];
+    const path = `/${para}`;
     window.history[replace ? "replaceState" : "pushState"]({}, "", path);
     setPaginaAtual(path);
   }
@@ -36,6 +36,8 @@ function App() {
     }
     function onHistory() { setPaginaAtual(window.location.pathname); checkSession(); }
     function onVisible() { if (document.visibilityState === "visible") checkSession(); }
+    function onExpired() { setUser(null); setPassword(""); setCode(""); navegar("login", true); }
+    window.addEventListener("timeid:expired", onExpired);
     checkSession();
     const interval = window.setInterval(checkSession, 60000);
     window.addEventListener("popstate", onHistory);
@@ -43,6 +45,7 @@ function App() {
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
+      window.removeEventListener("timeid:expired", onExpired);
       window.clearInterval(interval);
       window.removeEventListener("popstate", onHistory);
       window.removeEventListener("pageshow", onHistory);
@@ -52,20 +55,19 @@ function App() {
 
   async function handleLogin(event) {
     event.preventDefault(); setBusy(true); setError("");
-    try { setUser(await login(email, password)); setPassword(""); navegar("inicio", true); }
+    try { setUser(await login(email, password, code)); setPassword(""); setCode(""); navegar("inicio", true); }
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
   async function handleLogout() {
     setBusy(true); setError("");
-    try { await logout(); setUser(null); setPassword(""); navegar("login", true); }
+    try { await logout(); setUser(null); setPassword(""); setCode(""); navegar("login", true); }
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
   if (checking) return <main className="carregando-sessao" role="status">Verificando sessão...</main>;
   if (user) {
-    const Page = paginaAtual === "/cadastro" ? Cadastro : Inicio;
-    return <>{error && <p className="erro-sessao" role="alert">{error}</p>}<Page onUpdateProfile={setUser} user={user} aoNavegar={navegar} aoSair={handleLogout} busy={busy} /></>;
+    return <>{error && <p className="erro-sessao" role="alert">{error}</p>}<Workspace paginaAtual={paginaAtual} onUpdateProfile={setUser} user={user} aoNavegar={navegar} aoSair={handleLogout} busy={busy} /></>;
   }
   return (
     <main className="pagina-login">
@@ -143,6 +145,7 @@ function App() {
                   />
                 </div>
 
+                <label className="login-code">Código de autenticação (se ativado)<input type="text" autoComplete="one-time-code" maxLength={64} value={code} onChange={e => setCode(e.target.value)} placeholder="Código do app ou de recuperação" disabled={busy}/><small>Preencha apenas se ativou a autenticação em duas etapas nas configurações.</small></label>
                 <button type="submit" disabled={busy}>
                   {busy ? "Aguarde..." : "Entrar"}
                 </button>
