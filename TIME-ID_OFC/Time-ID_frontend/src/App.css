@@ -260,3 +260,8 @@ body {
 }
 .carregando-sessao { padding: 48px; text-align: center; color: #003d2c; }
 .erro-sessao { padding: 16px; color: #a32222; background: #fff0f0; }
+
+.login-code { display: grid; gap: 8px; color: #61766a; font-size: 12px; }
+.login-code input { border: 1px solid #d8e0dc; border-radius: 10px; padding: 12px; width: 100%; font: inherit; }
+
+.login-code small { display:block; margin-top:7px; font-size:12px; line-height:1.5; color:#657b73; }

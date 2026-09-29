@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 public class LoginRequest
 {
+    [StringLength(64)]
+    public string? Code { get; set; }
+
     private string email = string.Empty;
 
     [Required, EmailAddress, StringLength(254)]

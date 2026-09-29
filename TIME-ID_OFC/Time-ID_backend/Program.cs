@@ -1,3 +1,4 @@
+using TimeId.Operations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
@@ -14,6 +15,7 @@ public class Program
         builder.Services.AddControllers();
         // Chaves temporárias: cookies deixam de valer ao reiniciar, sem gravar no perfil do Windows.
         builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
+        builder.Services.AddSingleton<DataStore>();
         builder.Services.AddSingleton<AuthenticationService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
@@ -43,7 +45,8 @@ public class Program
                     AuthenticationService service = context.HttpContext.RequestServices.GetRequiredService<AuthenticationService>();
                     if (context.Principal?.FindFirstValue("session_stamp") != service.SessionStamp ||
                         !Guid.TryParse(context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ||
-                        service.FindActiveUser(id) is null)
+                        service.FindActiveUser(id) is null ||
+                        context.Principal?.FindFirstValue("security_stamp") != service.SecurityStamp(id))
                     {
                         context.RejectPrincipal();
                         await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -53,6 +56,16 @@ public class Program
         builder.Services.AddAuthorization();
 
         WebApplication app = builder.Build();
+        app.Use(async (context, next) =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api")) context.Response.Headers.CacheControl = "no-store";
+            try { await next(context); }
+            catch (DomainError error)
+            {
+                context.Response.StatusCode = error.Status;
+                await context.Response.WriteAsJsonAsync(new { title = error.Message, status = error.Status });
+            }
+        });
         app.UseDefaultFiles();
         app.UseStaticFiles();
         app.UseAuthentication();
@@ -60,7 +73,7 @@ public class Program
         app.MapGet("/api", () => Results.Ok(new
         {
             application = "TIME-ID API",
-            mode = "Login temporário com usuário em memória",
+            mode = "Gestão local com persistência em arquivo",
             login = "/api/auth/login",
             me = "/api/auth/me",
             logout = "/api/auth/logout"
@@ -72,7 +85,7 @@ public class Program
             context.User.Identity?.IsAuthenticated == true
                 ? Results.Redirect("/inicio")
                 : Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
-        foreach (string path in new[] { "/inicio", "/cadastro" })
+        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
         {
             app.MapGet(path, () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
                 .RequireAuthorization();

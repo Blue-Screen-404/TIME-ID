@@ -1,76 +1,45 @@
 using Microsoft.AspNetCore.Identity;
+using TimeId.Operations;
 
-public class AuthenticationService
+public class AuthenticationService(DataStore store)
 {
-    private readonly PasswordHasher<User> hasher = new();
-    private readonly List<User> users = new();
-    private readonly object gate = new();
+    private readonly PasswordHasher<Account> hasher = new();
     public string SessionStamp { get; } = Guid.NewGuid().ToString();
-
-    public AuthenticationService()
+    private static LoginResponse ToResponse(Account user) => new(user.Id, user.Username, user.Email, user.Role, user.PhotoUrl);
+    public string? SecurityStamp(Guid id) => store.Read(db => db.Accounts.FirstOrDefault(a => a.Id == id && a.Active)?.SecurityStamp);
+    public LoginResponse? ValidateCredentials(string email, string password, string? code = null) => store.Write(db =>
     {
-        AddDemoUser("Usuario de teste", "teste@timeid.local", "Administrador");
-        AddDemoUser("Usuario comum", "usuario@timeid.local", "Usuário");
-    }
-
-    private void AddDemoUser(string name, string email, string role)
+        var user = db.Accounts.FirstOrDefault(a => a.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+        var candidate = user ?? db.Accounts[0];
+        var result = hasher.VerifyHashedPassword(candidate, candidate.PasswordHash, password);
+        if (user is not { Active: true } || result == PasswordVerificationResult.Failed || !TwoFactor.VerifyAccount(user, code)) return null;
+        DataStore.Log(db, user, "Entrou", "Acesso", "Login realizado.");
+        return ToResponse(user);
+    });
+    public LoginResponse? FindActiveUser(Guid id) => store.Read(db =>
     {
-        var user = new User { Id = Guid.NewGuid(), Username = name, Email = email, PasswordHash = "" };
-        user.PasswordHash = hasher.HashPassword(user, "TimeId@123");
-        user.AssignRole(new Role { Id = Guid.NewGuid(), Name = role });
-        user.Activate();
-        users.Add(user);
-    }
-
-    private static LoginResponse ToResponse(User user) =>
-        new(user.Id, user.Username, user.Email, user.Role?.Name ?? "Usuário", user.PhotoUrl);
-
-    public LoginResponse? ValidateCredentials(string email, string password)
+        var user = db.Accounts.FirstOrDefault(a => a.Id == id && a.Active);
+        return user is null ? null : ToResponse(user);
+    });
+    public LoginResponse? UpdateProfile(Guid id, UpdateProfileRequest request) => store.Write(db =>
     {
-        lock (gate)
-        {
-            var user = users.FirstOrDefault(u => string.Equals(u.Email, email.Trim(), StringComparison.OrdinalIgnoreCase));
-            // Executa o hash mesmo para um e-mail desconhecido.
-            var candidate = user ?? users[0];
-            var result = hasher.VerifyHashedPassword(candidate, candidate.PasswordHash, password);
-            return user is { IsActive: true } && result != PasswordVerificationResult.Failed ? ToResponse(user) : null;
-        }
-    }
-
-    public LoginResponse? FindActiveUser(Guid id)
-    {
-        lock (gate)
-        {
-            var user = users.FirstOrDefault(u => u.Id == id && u.IsActive);
-            return user is null ? null : ToResponse(user);
-        }
-    }
-
-    public LoginResponse? UpdateProfile(Guid id, UpdateProfileRequest request)
-    {
-        lock (gate)
-        {
-            var user = users.FirstOrDefault(u => u.Id == id && u.IsActive);
-            if (user is null) return null;
-            bool admin = user.Role?.Name == "Administrador";
-            if (!admin && (request.Username is not null || request.Email is not null))
-                throw new UnauthorizedAccessException("Seu perfil permite alterar apenas a foto.");
-            string name = request.Username?.Trim() ?? user.Username;
-            string email = request.Email?.Trim() ?? user.Email;
-            if (name.Length < 2 || name.Length > 100)
-                throw new ArgumentException("O nome deve ter entre 2 e 100 caracteres.");
-            if (!System.Net.Mail.MailAddress.TryCreate(email, out var address) || address.Address != email)
-                throw new ArgumentException("Informe um e-mail válido.");
-            if (users.Any(u => u.Id != id && string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase)))
-                throw new ArgumentException("Este e-mail já está em uso.");
-            ValidatePhoto(request.PhotoUrl);
-            // Só altera o perfil depois de validar todos os campos.
-            user.Username = name;
-            user.UpdateEmail(email);
-            user.PhotoUrl = request.PhotoUrl;
-            return ToResponse(user);
-        }
-    }
+        var user = db.Accounts.FirstOrDefault(a => a.Id == id && a.Active);
+        if (user is null) return null;
+        if (user.Role != "Administrador" && (request.Username is not null || request.Email is not null))
+            throw new UnauthorizedAccessException("Seu perfil permite alterar apenas a foto.");
+        string name = request.Username?.Trim() ?? user.Username;
+        string email = request.Email?.Trim() ?? user.Email;
+        if (name.Length < 2 || name.Length > 100) throw new ArgumentException("O nome deve ter entre 2 e 100 caracteres.");
+        if (!System.Net.Mail.MailAddress.TryCreate(email, out var address) || address.Address != email) throw new ArgumentException("Informe um e-mail válido.");
+        if (db.Accounts.Any(a => a.Id != id && a.Email.Equals(email, StringComparison.OrdinalIgnoreCase)) || db.Employees.Any(e => e.Id != user.EmployeeId && e.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            throw new ArgumentException("Este e-mail já está em uso.");
+        ValidatePhoto(request.PhotoUrl);
+        user.Username = name; user.Email = email; user.PhotoUrl = request.PhotoUrl;
+        var employee = db.Employees.FirstOrDefault(e => e.Id == user.EmployeeId);
+        if (employee is not null) { employee.Name = name; employee.Email = email; }
+        DataStore.Log(db, user, "Editou", "Perfil", "Dados do próprio perfil atualizados.");
+        return ToResponse(user);
+    });
 
     private static void ValidatePhoto(string? photo)
     {
