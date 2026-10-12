@@ -34,6 +34,8 @@ dotnet run --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
 
 Aguarde aparecer `Now listening on: http://localhost:5000`. Mantenha esse terminal aberto enquanto usar o sistema. O mesmo programa C# entrega as telas React e processa as informações.
 
+Se aparecer **“Uma política de Controle de Aplicativo bloqueou este arquivo” (`0x800711C7`)**, o Windows impediu a execução. Nesse caso, o servidor não está ligado: veja [Bloqueio pelo Controle Inteligente de Aplicativos](#bloqueio-pelo-controle-inteligente-de-aplicativos) antes de tentar abrir o navegador.
+
 ### 4. Entre pelo login
 
 Acesse **[http://localhost:5000](http://localhost:5000)** no navegador. `localhost` significa o seu próprio computador.
@@ -63,6 +65,8 @@ Para usar outro dia, repita o comando do passo 3 e abra o endereço do passo 4. 
 
 | Situação | Como resolver |
 |---|---|
+| “Uma política de Controle de Aplicativo bloqueou este arquivo” / `0x800711C7` | Consulte o diagnóstico abaixo. Trocar npm, PowerShell ou a porta não resolve a assinatura da DLL bloqueada. |
+| Erro de privacidade ou certificado no navegador | Para esta execução local, digite exatamente `http://localhost:5000`, sem HTTPS. Se o bloqueio for do Windows, consulte a seção abaixo. |
 | “dotnet não é reconhecido” | Instale o SDK .NET e reabra o terminal ou o VS Code. |
 | “A compatible .NET SDK was not found” | Confira `dotnet --list-sdks` e instale uma versão da faixa 8.0.4xx. |
 | “O arquivo de projeto não existe” / `MSB1009` | Abra o terminal na pasta que contém este README e copie o comando completo. |
@@ -72,6 +76,26 @@ Para usar outro dia, repita o comando do passo 3 e abra o endereço do passo 4. 
 | “Conexão recusada” no navegador | Confira se o servidor está ligado e use `http://localhost:5000`. |
 | E-mail ou senha inválidos | Confira maiúsculas, espaços e se você já alterou as credenciais. Com duas etapas ativadas, informe também um código válido. |
 | O sistema voltou ao login | A sessão pode ter expirado, a senha ter mudado ou o servidor ter reiniciado. Entre novamente. |
+
+### Bloqueio pelo Controle Inteligente de Aplicativos
+
+No diagnóstico feito em 12/10/2026, o comando de inicialização chegou à execução do C#, mas o Windows bloqueou `Time-ID_backend/bin/Debug/net8.0/TIME-ID_OFC.dll` com uma `FileLoadException` e o código `0x800711C7`. Os registros de **CodeIntegrity** mostraram o evento **3077** (requisitos de assinatura não atendidos) e o evento **3118** (Smart App Control). A DLL gerada localmente não possui assinatura digital Authenticode.
+
+Isso é uma regra de segurança do Windows, não uma política de privacidade do TIMEID ou um problema de Node.js. A compilação pode terminar normalmente e, mesmo assim, a execução ser bloqueada. O comando de inicialização do passo 3 continua sendo o correto; não há uma mudança de comando no README que autorize a DLL perante essa política.
+
+**Para resolver mantendo a proteção:** a versão executável precisa ser assinada com um certificado de assinatura de código de um fornecedor confiável, conforme as [orientações oficiais da Microsoft](https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/code-signing-for-smart-app-control). Essa etapa depende de um certificado ou serviço de assinatura autorizado; o repositório não inclui um. Em computador administrado pela faculdade ou empresa, encaminhe a mensagem e o caminho do arquivo à equipe responsável para definir uma distribuição aprovada.
+
+A Microsoft informa que o Smart App Control não oferece uma exceção individual para simplesmente permitir um aplicativo bloqueado. Consulte as [perguntas frequentes oficiais](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions). Não é necessário alterar a estrutura React/C# para diagnosticar esse caso. Não foi desativada nenhuma proteção do Windows.
+
+Para consultar o motivo no Windows, abra o **Visualizador de Eventos > Logs de Aplicativos e Serviços > Microsoft > Windows > CodeIntegrity > Operational** e procure os eventos no horário da tentativa. Para conferir apenas a compilação, sem iniciar o servidor, execute:
+
+```powershell
+dotnet build ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj
+```
+
+Após disponibilizar uma versão aprovada para essa política, siga as instruções de execução fornecidas com ela. Não confunda a aprovação de uma versão assinada com a recompilação do código: compilar novamente gera novos binários, que precisam passar pelo processo de assinatura/aprovação novamente.
+
+O endereço `http://localhost:5102` usado em verificações anteriores era de um servidor temporário de teste. A execução normal documentada usa **http://localhost:5000** e só estará disponível quando o terminal mostrar `Now listening on`.
 
 ## Primeiro uso e funcionalidades
 
@@ -180,3 +204,5 @@ Os scripts compilam o C#, iniciam servidores temporários nas portas 5099 e 5101
 ## Equipe
 
 **Blue-Screen-404** — projeto acadêmico de desenvolvimento de software e gestão de pessoas.
+
+Arthur Ribeiro de Oliveira, Pedro Henrique Cardoso, José Flavio, João pedro Leal, Gabriel Rodrigues
