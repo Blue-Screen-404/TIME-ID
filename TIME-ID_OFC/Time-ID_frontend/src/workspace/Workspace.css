@@ -166,3 +166,7 @@ button.setting-row:hover { background:var(--soft); }
 :root[data-theme="escuro"] .profile-modal-header,:root[data-theme="escuro"] .profile-photo-label { border-color:var(--line); }
 :root[data-theme="escuro"] .profile-modal-header p,:root[data-theme="escuro"] .profile-hint,:root[data-theme="escuro"] .profile-photo-row small,:root[data-theme="escuro"] .profile-identity span { color:var(--subtle); }
 :root[data-theme="escuro"] .profile-modal-icon { background:var(--soft); color:var(--green); }
+.workday-picker { grid-column: 1 / -1; margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; }
+.workday-picker legend { padding: 0 6px; font-weight: 700; }
+.workday-options { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.workday-picker .check-field { margin: 0; }

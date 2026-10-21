@@ -70,11 +70,19 @@ public class WorkspaceController(DataStore store) : ControllerBase
             linked.PasswordHash = new PasswordHasher<Account>().HashPassword(linked, input.InitialPassword!);
             db.Accounts.Add(linked);
         }
-        Require(input.AccessRole is "Administrador" or "Usuário", "Perfil de acesso inválido.");
+        Require(input.AccessRole is "Administrador" or "Gestor" or "Usuário", "Perfil de acesso inválido.");
         foreach (var team in db.Departments.Where(d => d.LeaderId == employee.Id && (d.Id != input.DepartmentId || !input.Active))) team.LeaderId = null;
         employee.Name = input.Name.Trim(); employee.Cpf = cpf; employee.Registration = input.Registration.Trim();
         employee.Email = input.Email.Trim(); employee.Phone = (input.Phone ?? "").Trim(); employee.BirthDate = input.BirthDate;
         employee.HireDate = input.HireDate; employee.DepartmentId = input.DepartmentId; employee.Position = input.Position.Trim();
+        Require(input.WorkMode is "Presencial" or "Híbrido" or "Remoto", "Selecione um regime de trabalho válido.");
+        employee.WorkMode = input.WorkMode;
+        var validWorkDays = new[] { "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo" };
+        var requestedWorkDays = input.WorkDays ?? new List<string>();
+        Require(requestedWorkDays.Distinct().Count() == requestedWorkDays.Count && requestedWorkDays.All(validWorkDays.Contains), "Selecione dias presenciais válidos.");
+        Require(input.WorkMode != "Híbrido" || requestedWorkDays.Count > 0, "Selecione pelo menos um dia presencial para o regime híbrido.");
+        employee.WorkDays = input.WorkMode == "Híbrido" ? requestedWorkDays.ToList() : new List<string>();
+        if (!input.Active || input.WorkMode == "Remoto") db.FaceProfiles.RemoveAll(profile => profile.EmployeeId == employee.Id);
         var postalCode = new string((input.PostalCode ?? "").Where(char.IsDigit).ToArray());
         Require(postalCode.Length == 0 || (postalCode.Length == 8 && System.Text.RegularExpressions.Regex.IsMatch(input.PostalCode!, @"^\d{5}-?\d{3}$")), "Informe um CEP com 8 dígitos.");
         var state = (input.State ?? "").Trim().ToUpperInvariant();
@@ -108,6 +116,7 @@ public class WorkspaceController(DataStore store) : ControllerBase
         Require(!db.Punches.Any(p => p.EmployeeId == id) && !db.Vacations.Any(v => v.EmployeeId == id), "Há histórico de ponto ou férias. Inative o funcionário para preservar os registros.");
         Require(!db.Accounts.Any(a => a.Id == actor.Id && a.EmployeeId == id), "Você não pode excluir sua própria conta.");
         foreach (var team in db.Departments.Where(d => d.LeaderId == id)) team.LeaderId = null;
+        db.FaceProfiles.RemoveAll(profile => profile.EmployeeId == id);
         foreach (var account in db.Accounts.Where(a => a.EmployeeId == id)) { account.Active = false; account.EmployeeId = null; }
         db.Employees.Remove(employee); DataStore.Log(db, actor, "Excluiu", "Funcionário", employee.Name); return new { deleted = true };
     }));
@@ -145,7 +154,7 @@ public class WorkspaceController(DataStore store) : ControllerBase
         var day = db.Punches.Where(p => p.EmployeeId == staff.Id && DataStore.Date(p.At) == DataStore.Today).OrderBy(p => p.At).ToList();
         Require(day.Count < 4, "A jornada de hoje já foi encerrada.");
         Require(day.Count == 0 || (DateTimeOffset.UtcNow - day[^1].At).TotalSeconds >= 30, "Aguarde 30 segundos antes de registrar outra marcação.");
-        var punch = new Punch { EmployeeId = staff.Id, Kind = Kinds[day.Count], At = DateTimeOffset.UtcNow };
+        var punch = new Punch { EmployeeId = staff.Id, Kind = Kinds[day.Count], At = DateTimeOffset.UtcNow, Source = "App" };
         db.Punches.Add(punch); DataStore.Log(db, actor, "Registrou", "Ponto", $"{staff.Name}: {punch.Kind}"); return punch;
     }));
     [HttpPut("punches/{id:guid}")]

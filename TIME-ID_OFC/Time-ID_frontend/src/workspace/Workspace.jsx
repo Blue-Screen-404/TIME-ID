@@ -9,6 +9,7 @@ import { Departments, Vacations, Holidays } from "./Records";
 import Attendance from "./Attendance";
 import Reports from "./Reports";
 import Settings from "./Settings";
+import { FacialAdmin } from "./Facial";
 import { Field, Modal } from "./Ui";
 import { api } from "../services/workspace";
 import "../pages/Inicio.css";
@@ -24,12 +25,12 @@ const departmentExamples = {
  "Produção": "Planejamento e execução da produção e controle de qualidade.",
  "Atendimento ao Cliente": "Atendimento de solicitações, dúvidas e suporte aos clientes."
 };
-const labels={inicio:"Início",ponto:"Ponto",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
+const labels={inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
 export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavegar, aoSair, busy:authBusy }) {
- const page=paginaAtual.replace(/^\//,"")||"inicio", admin=user.role==="Administrador";
+ const page=paginaAtual.replace(/^\//,"")||"inicio", admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
  const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false);
  const refresh=useCallback(async()=>{const next=await api();setData(next);setLoadError("");},[]);
- useEffect(()=>{let active=true;api().then(next=>{if(active)setData(next);}).catch(err=>{if(active)setLoadError(err.message);});return()=>{active=false;};},[user.id]);
+ useEffect(()=>{let active=true;const load=()=>api().then(next=>{if(active){setData(next);setLoadError("");}}).catch(err=>{if(active)setLoadError(err.message);});const onVisible=()=>{if(document.visibilityState==="visible")load();};load();window.addEventListener("focus",onVisible);document.addEventListener("visibilitychange",onVisible);return()=>{active=false;window.removeEventListener("focus",onVisible);document.removeEventListener("visibilitychange",onVisible);};},[user.id,page]);
  useEffect(()=>{document.title=`${labels[page]??"Início"} — TIMEID`;},[page]);
  useEffect(()=>{if(data)document.documentElement.dataset.theme=data.preferences.theme;return()=>{delete document.documentElement.dataset.theme;};},[data?.preferences.theme]);
  function message(text,isError=false){setNotice({text,isError});}
@@ -58,7 +59,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  async function punch(employeeId){try{await mutate("/punches","POST",{employeeId});message("Ponto registrado com o horário do servidor.");}catch(err){message(err.message,true);}}
  async function preferences(value){try{await mutate("/preferences","PUT",value);}catch(err){message(err.message,true);}}
  if(!data)return <main className="loading-panel"><h2>TIMEID</h2><p role={loadError?"alert":"status"}>{loadError||"Carregando seus dados..."}</p>{loadError&&<button className="btn primary" onClick={()=>refresh().catch(err=>setLoadError(err.message))}>Tentar novamente</button>}</main>;
- const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios"].includes(page);
+ const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios"].includes(page)||!facialAccess&&page==="facial";
  const pending=data.vacations.filter(v=>v.status==="Solicitada");
  const field=(label,key,props={})=><Field label={label} value={editor.draft[key]??""} onChange={e=>change(key,e.target.value)} {...props}/>;
  const selectedEmployee=editor?.draft.employeeId;
@@ -67,7 +68,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  const leaveDays=leaveStart && leaveEnd ? Math.round((Date.parse(leaveEnd)-Date.parse(leaveStart))/86400000)+1 : 0;
  const leaveMax=leaveStart && Number.isFinite(Date.parse(leaveStart)) ? new Date(Date.parse(leaveStart)+13*86400000).toISOString().slice(0,10) : undefined;
  const employeeSelect=<Field label="Funcionário *"><select required value={selectedEmployee??""} onChange={e=>change("employeeId",e.target.value)}><option value="">Selecione</option>{data.employees.filter(e=>e.active||e.id===selectedEmployee).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select></Field>;
- return <main className="dashboard work-app"><Sidebar pagina={page} aoNavegar={navigate} aoSair={aoSair} busy={authBusy} admin={admin}/><section className="workspace-main"><header className="workspace-header"><strong className="page-label"><House size={18}/>{labels[page]??"Início"}</strong>{admin&&<form className="global-search" onSubmit={e=>{e.preventDefault();navigate("funcionarios");}}><Search size={17}/><input aria-label="Busca geral" placeholder="Buscar funcionário, departamento..." value={query} onChange={e=>setQuery(e.target.value)}/></form>}<div className="header-actions">{data.preferences.notifications&&<div className="notifications"><button className="icon-button" aria-label="Notificações" aria-expanded={notifications} onClick={()=>setNotifications(v=>!v)}><Bell size={20}/>{pending.length>0&&<i/>}</button>{notifications&&<div className="notification-panel"><strong>Notificações</strong><button onClick={()=>navigate("ferias")}>{pending.length} solicitações de férias pendentes</button><p>{data.stats.birthdays} aniversariantes hoje</p></div>}</div>}<ProfileMenu user={user} onUpdate={updated=>{onUpdateProfile(updated);refresh().catch(err=>message(err.message,true));}}/></div></header>
+ return <main className="dashboard work-app"><Sidebar pagina={page} aoNavegar={navigate} aoSair={aoSair} busy={authBusy} admin={admin} facialAccess={facialAccess}/><section className="workspace-main"><header className="workspace-header"><strong className="page-label"><House size={18}/>{labels[page]??"Início"}</strong>{admin&&<form className="global-search" onSubmit={e=>{e.preventDefault();navigate("funcionarios");}}><Search size={17}/><input aria-label="Busca geral" placeholder="Buscar funcionário, departamento..." value={query} onChange={e=>setQuery(e.target.value)}/></form>}<div className="header-actions">{data.preferences.notifications&&<div className="notifications"><button className="icon-button" aria-label="Notificações" aria-expanded={notifications} onClick={()=>setNotifications(v=>!v)}><Bell size={20}/>{pending.length>0&&<i/>}</button>{notifications&&<div className="notification-panel"><strong>Notificações</strong><button onClick={()=>navigate("ferias")}>{pending.length} solicitações de férias pendentes</button><p>{data.stats.birthdays} aniversariantes hoje</p></div>}</div>}<ProfileMenu user={user} onUpdate={updated=>{onUpdateProfile(updated);refresh().catch(err=>message(err.message,true));}}/></div></header>
  <div className="workspace-content">{notice&&<div className={`notice ${notice.isError?"error":""}`} role={notice.isError?"alert":"status"}>{notice.text}<button aria-label="Fechar mensagem" onClick={()=>setNotice(null)}><X size={16}/></button></div>}
  {restricted?<section className="work-card"><h2>Acesso restrito</h2><p>Esta área é exclusiva de administradores.</p></section>:<>
  {page==="inicio"&&<Dashboard data={data} user={user} navigate={navigate}/>}
@@ -75,6 +76,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {page==="cadastro"&&<EmployeeForm key={employee?.id??"new"} data={data} employee={employee} save={saveStaff} createDepartment={()=>edit("departments")} cancel={()=>navigate("listar")} busy={busy} error={error}/>}
  {page==="departamentos"&&<Departments data={data} edit={edit} remove={remove}/>}
  {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy}/>}
+ {page==="facial"&&facialAccess&&<FacialAdmin data={data} message={message} canManage={admin}/>}
  {page==="ferias"&&<Vacations data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="feriados"&&<Holidays data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="relatorios"&&<Reports data={data}/>}
