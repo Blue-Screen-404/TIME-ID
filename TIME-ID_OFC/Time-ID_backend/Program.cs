@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 
 public class Program
 {
@@ -13,8 +14,16 @@ public class Program
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
         builder.Services.AddControllers();
-        // Chaves temporárias: cookies deixam de valer ao reiniciar, sem gravar no perfil do Windows.
-        builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
+        // A conexão é configurada para uso futuro; SQLite só cria o arquivo quando
+        // alguma operação abre a conexão ou executa uma migração explicitamente.
+        string sqliteConnection = builder.Configuration.GetConnectionString("TimeId")
+            ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "timeid.sqlite")}";
+        builder.Services.AddDbContext<TimeIdDbContext>(options => options.UseSqlite(sqliteConnection));
+        // Cookies continuam invalidados por session stamp; chave local também protege os
+        // descritores faciais cifrados que o administrador cadastrará no futuro.
+        IDataProtectionBuilder dataProtection = builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(
+            Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys")));
+        if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
         builder.Services.AddSingleton<DataStore>();
         builder.Services.AddSingleton<AuthenticationService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -85,7 +94,8 @@ public class Program
             context.User.Identity?.IsAuthenticated == true
                 ? Results.Redirect("/inicio")
                 : Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
-        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
+        app.MapGet("/terminal", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
+        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
         {
             app.MapGet(path, () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
                 .RequireAuthorization();

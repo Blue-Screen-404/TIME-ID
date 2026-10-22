@@ -10,6 +10,7 @@ public class Database
     public List<Staff> Employees { get; set; } = new();
     public List<Team> Departments { get; set; } = new();
     public List<Punch> Punches { get; set; } = new();
+    public List<FaceProfile> FaceProfiles { get; set; } = new();
     public List<Leave> Vacations { get; set; } = new();
     public List<DayOff> Holidays { get; set; } = new();
     public List<Change> Audit { get; set; } = new();
@@ -44,6 +45,8 @@ public class StaffInput
     public DateOnly HireDate { get; set; }
     public Guid DepartmentId { get; set; }
     [Required, StringLength(100)] public string Position { get; set; } = "";
+    [RegularExpression("^(Presencial|Híbrido|Remoto)$")] public string WorkMode { get; set; } = "Presencial";
+    public List<string> WorkDays { get; set; } = new();
     [Range(1, 44)] public int WeeklyHours { get; set; } = 40;
     [StringLength(300)] public string Address { get; set; } = "";
     [StringLength(9)] public string PostalCode { get; set; } = "";
@@ -58,7 +61,7 @@ public class StaffInput
     public bool Active { get; set; } = true;
     public bool CreateAccess { get; set; }
     [StringLength(128, MinimumLength = 8)] public string? InitialPassword { get; set; }
-    [RegularExpression("^(Administrador|Usuário)$")] public string AccessRole { get; set; } = "Usuário";
+    [RegularExpression("^(Administrador|Gestor|Usuário)$")] public string AccessRole { get; set; } = "Usuário";
 }
 public class Staff
 {
@@ -72,6 +75,8 @@ public class Staff
     public DateOnly HireDate { get; set; }
     public Guid DepartmentId { get; set; }
     public string Position { get; set; } = "";
+    public string WorkMode { get; set; } = "Presencial";
+    public List<string> WorkDays { get; set; } = new();
     public int WeeklyHours { get; set; }
     public string Address { get; set; } = "";
     public string PostalCode { get; set; } = "";
@@ -100,6 +105,24 @@ public class Punch
     public string Kind { get; set; } = "Entrada";
     public DateTimeOffset At { get; set; }
     public string? Correction { get; set; }
+    public string Source { get; set; } = "App";
+}
+public class FaceProfile
+{
+    public Guid EmployeeId { get; set; }
+    public string ProtectedDescriptor { get; set; } = "";
+    public DateTimeOffset EnrolledAt { get; set; } = DateTimeOffset.UtcNow;
+    public Guid EnrolledBy { get; set; }
+}
+public class FaceEnrollmentInput
+{
+    [Required] public Guid EmployeeId { get; set; }
+    [Required] public float[] Descriptor { get; set; } = Array.Empty<float>();
+    public bool IdentityVerified { get; set; }
+}
+public class FaceMatchInput
+{
+    [Required] public float[] Descriptor { get; set; } = Array.Empty<float>();
 }
 public class PunchInput { public Guid EmployeeId { get; set; } }
 public class PunchCorrection

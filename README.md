@@ -102,9 +102,9 @@ O endereço `http://localhost:5102` usado em verificações anteriores era de um
 Os números mostrados nas telas vêm dos cadastros salvos. Uma instalação nova começa sem funcionários ou departamentos; os nomes e quantidades da imagem de referência não são dados reais do sistema.
 
 1. Entre como administrador e abra **Departamentos** para criar os setores.
-2. Em **Cadastrar**, preencha as três etapas: dados pessoais, cargo/departamento e acesso ao sistema. A criação de uma conta é opcional; informe uma senha inicial se desejar habilitar o login do funcionário. Não é enviado convite por e-mail.
+2. Em **Cadastrar**, preencha as três etapas: dados pessoais, cargo/departamento (incluindo regime presencial, híbrido ou remoto) e acesso ao sistema. A criação de uma conta é opcional; informe uma senha inicial se desejar habilitar o login do funcionário. Não é enviado convite por e-mail.
 3. Use **Funcionários** ou **Listar** para pesquisar, filtrar, editar, inativar e excluir cadastros. O CPF é validado, e CPF, matrícula e e-mail duplicados são recusados. Se houver histórico de ponto ou férias, inative o funcionário em vez de excluí-lo.
-4. Em **Ponto**, registre entrada, início do intervalo, retorno do intervalo e saída. O administrador seleciona o funcionário; o usuário comum registra apenas o próprio ponto. Para vincular uma conta existente ao cadastro, use o mesmo e-mail no funcionário.
+4. Em **Ponto**, registre entrada, início do intervalo, retorno do intervalo e saída. O administrador seleciona o funcionário; o usuário comum registra apenas o próprio ponto. Para o terminal presencial, use o perfil administrador para cadastrar o rosto de colaboradores presenciais ou híbridos e abra `http://localhost:5000/terminal` no computador ligado à câmera. O terminal funciona sem login do colaborador; o registro pelo app permanece disponível para home office ou indisponibilidade do terminal. Para vincular uma conta existente ao cadastro, use o mesmo e-mail no funcionário.
 5. Cadastre os **Feriados** e gerencie os pedidos em **Férias**. O administrador pode aprovar ou recusar solicitações; o usuário comum acompanha as próprias e pode alterar ou excluir apenas as pendentes.
 
 | Tela | O que está disponível |
@@ -114,6 +114,7 @@ Os números mostrados nas telas vêm dos cadastros salvos. Uma instalação nova
 | Cadastrar | Formulário em três etapas com dados pessoais, CEP, rua, número, complemento, bairro, cidade e UF; sugestões de cargos com atividades editáveis, opção de cargo personalizado e conta opcional. Endereços anteriores são preservados para revisão. |
 | Departamentos | Cadastro, edição, exclusão e escolha de líder entre funcionários ativos do setor. Setores com funcionários não podem ser excluídos. |
 | Ponto | Marcações no horário do servidor, consulta por data, espelho com horas dos intervalos concluídos e correções administrativas com justificativa. |
+| Reconhecimento facial | Área exclusiva para Administrador e Gestor. O gestor consulta os cadastros e o relatório semanal; apenas o administrador cadastra ou remove padrões faciais. As imagens são processadas no navegador local, os descritores são cifrados no armazenamento local, e colaboradores remotos não entram no fluxo facial. |
 | Férias | Cadastro, consulta, edição, exclusão e aprovação/recusa; limite demonstrativo de 14 dias corridos por solicitação (incluindo início e fim), validado também pelo servidor para ambos os perfis, e verificação de sobreposição de períodos. |
 | Feriados | Cadastro, edição, exclusão e consulta por ano. |
 | Relatórios | Funcionários, departamentos, férias, feriados, ponto e relatório personalizado com escolha de colunas; exportação CSV e impressão/PDF pelo navegador. |
@@ -126,7 +127,10 @@ Os relatórios de funcionários usam a data de admissão; os de férias consider
 As permissões são verificadas também pelo servidor, não apenas pelo menu.
 
 - **Administrador:** gerencia funcionários, departamentos, férias, feriados, relatórios, dados da empresa e backup; registra e corrige pontos.
+- **Gestor:** consulta apenas a área de reconhecimento facial e o relatório semanal; não cadastra nem remove padrões faciais.
 - **Usuário:** consulta os próprios dados de funcionário, registra e consulta o próprio ponto, solicita férias, consulta feriados e configura a própria conta. A conta precisa estar vinculada a um funcionário para registrar ponto ou solicitar férias.
+
+O terminal reconhece padrões faciais 2D e não inclui verificação de prova de vida. Antes de usar as marcações como controle oficial, a empresa deve avaliar a precisão e o risco de fraude com fotos ou telas, definir retenção e base legal para biometria e manter o ponto pelo app como alternativa. Dados biométricos são dados pessoais sensíveis pela LGPD.
 
 No canto superior direito, clique no perfil e escolha **Ver perfil**. O administrador pode editar o próprio nome, e-mail e foto; o usuário comum pode alterar somente a foto nesse modal. O perfil de acesso não é alterado ali. As fotos aceitam PNG, JPEG ou WebP de até 2 MB.
 

@@ -4,6 +4,7 @@ import "./App.css";
 import iconeUsuario from "./assets/icone-usuario.png";
 import iconeSenha from "./assets/icone-senha.png";
 import Workspace from "./workspace/Workspace";
+import { FacialTerminal } from "./workspace/Facial";
 
 function App() {
   const [paginaAtual, setPaginaAtual] = useState(window.location.pathname);
@@ -24,6 +25,7 @@ function App() {
   useEffect(() => {
     let active = true;
     async function checkSession() {
+      if (window.location.pathname === "/terminal") { if (active) setChecking(false); return; }
       try {
         const current = await getCurrentUser();
         if (!active) return;
@@ -65,6 +67,7 @@ function App() {
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
+  if (window.location.pathname === "/terminal") return <FacialTerminal/>;
   if (checking) return <main className="carregando-sessao" role="status">Verificando sessão...</main>;
   if (user) {
     return <>{error && <p className="erro-sessao" role="alert">{error}</p>}<Workspace paginaAtual={paginaAtual} onUpdateProfile={setUser} user={user} aoNavegar={navegar} aoSair={handleLogout} busy={busy} /></>;
