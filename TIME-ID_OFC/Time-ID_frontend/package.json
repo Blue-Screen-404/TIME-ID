@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/prepare-models.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "@vladmandic/face-api": "^1.7.15",
     "lucide-react": "^1.48.0",
     "react": "latest",
     "react-dom": "latest",

@@ -28,3 +28,6 @@ yarn-error.log*
 
 # Publicações locais
 /artifacts/
+
+# Dados locais e backups com informações pessoais
+**/App_Data/

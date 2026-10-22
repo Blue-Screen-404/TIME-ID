@@ -14,7 +14,7 @@ async function request(path, options = {}) {
   }
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error("E-mail ou senha inválidos.");
+      throw new Error("E-mail, senha ou código de autenticação inválidos.");
     }
     if (response.status === 400) {
       throw new Error("Confira o formato do e-mail e preencha a senha.");
@@ -27,11 +27,11 @@ async function request(path, options = {}) {
   return response.json();
 }
 
-export function login(email, password) {
+export function login(email, password, code) {
   return request("login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, code: code || null }),
   });
 }
 

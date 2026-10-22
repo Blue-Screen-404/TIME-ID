@@ -1,0 +1,13 @@
+import { useState } from "react";
+import { Pencil, Trash2, Users, UserMinus, Building2 } from "lucide-react";
+import { Badge, Heading, Stat, Table } from "./Ui";
+import { normalize } from "../services/workspace";
+export default function Employees({ data, query, setQuery, navigate, edit, remove, list }) {
+  const [department, setDepartment] = useState(""); const [status, setStatus] = useState("");
+  const dept = id => data.departments.find(d => d.id === id)?.name ?? "—";
+  const rows = data.employees.filter(e => normalize(`${e.name} ${e.cpf} ${e.registration} ${e.position} ${dept(e.departmentId)}`).includes(normalize(query)) && (!department || e.departmentId === department) && (!status || String(e.active) === status));
+  return <><Heading title={list ? "Lista de Funcionários" : "Funcionários"} subtitle="Consulte, atualize e organize os colaboradores da empresa." action={() => navigate("cadastro")} label="Adicionar funcionário"/>
+  {!list && <div className="stats-grid three"><Stat icon={Users} value={data.stats.total} label="Funcionários cadastrados"/><Stat icon={UserMinus} value={data.stats.inactive} label="Inativos"/><Stat icon={Building2} value={data.stats.departments} label="Departamentos"/></div>}
+  <section className="work-card"><div className="filters"><input aria-label="Buscar funcionários" placeholder="Buscar por nome, CPF, matrícula ou departamento..." value={query} onChange={e => setQuery(e.target.value)}/><select aria-label="Filtrar departamento" value={department} onChange={e => setDepartment(e.target.value)}><option value="">Todos os departamentos</option>{data.departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select><select aria-label="Filtrar status" value={status} onChange={e => setStatus(e.target.value)}><option value="">Todos os status</option><option value="true">Ativos</option><option value="false">Inativos</option></select></div>
+  <Table columns={["Nome / Matrícula", "CPF", "Departamento", "Cargo", "Status", "Ações"]} rows={rows} render={e => <tr key={e.id}><td><strong>{e.name}</strong><small>{e.registration}</small></td><td>{e.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</td><td>{dept(e.departmentId)}</td><td>{e.position}</td><td><Badge good={e.active}>{e.active ? "Ativo" : "Inativo"}</Badge></td><td><div className="row-actions"><button className="icon-button" aria-label={`Editar ${e.name}`} onClick={() => edit(e)}><Pencil size={17}/></button><button className="icon-button danger" aria-label={`Excluir ${e.name}`} onClick={() => remove("employees", e.id, e.name)}><Trash2 size={17}/></button></div></td></tr>}/></section></>;
+}

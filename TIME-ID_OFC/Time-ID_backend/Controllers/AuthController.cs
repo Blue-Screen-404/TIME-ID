@@ -19,7 +19,7 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
-        LoginResponse? user = service.ValidateCredentials(request.Email, request.Password);
+        LoginResponse? user = service.ValidateCredentials(request.Email, request.Password, request.Code);
         if (user == null)
         {
             return Problem(statusCode: 401, title: "E-mail ou senha inválidos.");
@@ -30,7 +30,8 @@ public class AuthController : ControllerBase
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim("session_stamp", service.SessionStamp)
+            new Claim("session_stamp", service.SessionStamp),
+            new Claim("security_stamp", service.SecurityStamp(user.Id)!)
         }, CookieAuthenticationDefaults.AuthenticationScheme);
 
         await HttpContext.SignInAsync(

@@ -6,6 +6,7 @@ $project = Join-Path $root "TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj"
 $testOutput = Join-Path $root "artifacts/tests"
 $dll = Join-Path $testOutput "TIME-ID_OFC.dll"
 $baseUrl = "http://localhost:$Port"
+$testData = Join-Path $root ("artifacts/test-login-" + [guid]::NewGuid() + ".json")
 $script:serverProcess = $null
 $logPrefix = Join-Path ([System.IO.Path]::GetTempPath()) ("timeid-login-" + [guid]::NewGuid())
 $script:runNumber = 0
@@ -15,7 +16,7 @@ function Start-TestServer {
     $stdout = "$logPrefix-$script:runNumber.out.log"
     $stderr = "$logPrefix-$script:runNumber.err.log"
     $script:serverProcess = Start-Process dotnet -ArgumentList @(
-        ('"' + $dll + '"'), "--urls", $baseUrl
+        ('"' + $dll + '"'), "--urls", $baseUrl, "--TIMEID_DATA_PATH", ('"' + $testData + '"')
     ) -PassThru -WindowStyle Hidden -WorkingDirectory (Split-Path $project -Parent) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     for ($attempt = 0; $attempt -lt 120; $attempt++) {
         if ($script:serverProcess.HasExited) {
@@ -43,7 +44,7 @@ function Assert-Request($label, $method, $path, $body, $session, $expected) {
         WebSession = $session; TimeoutSec = 10
     }
     if ($null -ne $body) {
-        $parameters.ContentType = "application/json"
+        $parameters.ContentType = "application/json; charset=utf-8"
         $parameters.Body = $body
     }
     $response = $null
