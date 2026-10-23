@@ -6,6 +6,7 @@
     <RootNamespace>TIME_ID_OFC</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>timeid-password-reset-local</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

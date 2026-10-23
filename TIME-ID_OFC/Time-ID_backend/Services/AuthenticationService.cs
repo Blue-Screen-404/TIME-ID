@@ -105,14 +105,17 @@ public class AuthenticationService(DataStore store, PasswordResetEmailService pa
             user.PasswordResetExpiresAt <= DateTimeOffset.UtcNow || user.PasswordResetAttempts >= 5)
             return false;
 
-        user.PasswordResetAttempts++;
         string hash = ResetCodeHash(user.Id, code);
         bool valid = CryptographicOperations.FixedTimeEquals(
             Convert.FromHexString(user.PasswordResetHash), Convert.FromHexString(hash));
-        if (!valid && user.PasswordResetAttempts >= 5)
+        if (!valid)
         {
-            user.PasswordResetHash = null;
-            user.PasswordResetExpiresAt = null;
+            user.PasswordResetAttempts++;
+            if (user.PasswordResetAttempts >= 5)
+            {
+                user.PasswordResetHash = null;
+                user.PasswordResetExpiresAt = null;
+            }
         }
         return valid;
     }

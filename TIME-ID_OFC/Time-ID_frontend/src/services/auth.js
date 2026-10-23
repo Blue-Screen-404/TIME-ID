@@ -13,8 +13,12 @@ async function request(path, options = {}) {
     return null;
   }
   if (!response.ok) {
+    const problem = await response.json().catch(() => null);
     if (response.status === 401) {
       throw new Error("E-mail, senha ou código de autenticação inválidos.");
+    }
+    if (problem?.title) {
+      throw new Error(problem.title);
     }
     if (response.status === 400) {
       throw new Error("Confira o formato do e-mail e preencha a senha.");
