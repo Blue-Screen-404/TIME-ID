@@ -35,6 +35,30 @@ export function login(email, password, code) {
   });
 }
 
+export function requestPasswordReset(email) {
+  return request("password-reset/request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function verifyPasswordResetCode(email, code) {
+  return request("password-reset/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
+}
+
+export function confirmPasswordReset(email, code, newPassword) {
+  return request("password-reset/confirm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+}
+
 export function getCurrentUser() {
   return request("me");
 }

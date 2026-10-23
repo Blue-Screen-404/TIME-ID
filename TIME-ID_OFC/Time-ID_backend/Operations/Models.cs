@@ -29,6 +29,10 @@ public class Account
     public string? TwoFactorSecret { get; set; }
     public string? PendingTwoFactorSecret { get; set; }
     public List<string> RecoveryHashes { get; set; } = new();
+    public string? PasswordResetHash { get; set; }
+    public DateTimeOffset? PasswordResetExpiresAt { get; set; }
+    public DateTimeOffset? PasswordResetLastSentAt { get; set; }
+    public int PasswordResetAttempts { get; set; }
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString();
     public string Theme { get; set; } = "claro";
     public bool Notifications { get; set; } = true;
@@ -171,4 +175,20 @@ public class TwoFactorInput
 {
     [Required] public string Password { get; set; } = "";
     [StringLength(64)] public string? Code { get; set; }
+}
+
+public class PasswordResetRequest
+{
+    [Required, EmailAddress, StringLength(254)] public string Email { get; set; } = "";
+}
+
+public class PasswordResetVerification
+{
+    [Required, EmailAddress, StringLength(254)] public string Email { get; set; } = "";
+    [Required, RegularExpression("^\\d{6}$")] public string Code { get; set; } = "";
+}
+
+public class PasswordResetConfirmation : PasswordResetVerification
+{
+    [Required, StringLength(128, MinimumLength = 8)] public string NewPassword { get; set; } = "";
 }

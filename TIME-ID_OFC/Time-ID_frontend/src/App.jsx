@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { login, getCurrentUser, logout } from "./services/auth";
+import { useEffect, useRef, useState } from "react";
+import { confirmPasswordReset, getCurrentUser, login, logout, requestPasswordReset, verifyPasswordResetCode } from "./services/auth";
 import { LockKeyhole, Mail, ShieldCheck, UsersRound } from "lucide-react";
 import pessoasLogin from "./assets/pessoas-login.png";
 import "./App.css";
@@ -14,6 +14,12 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
+  const [telaAcesso, setTelaAcesso] = useState("login");
+  const [codigoRecuperacao, setCodigoRecuperacao] = useState(["", "", "", "", "", ""]);
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
+  const inputsCodigo = useRef([]);
 
   function navegar(para, replace = false) {
     const path = `/${para}`;
@@ -66,6 +72,80 @@ function App() {
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
+
+  function abrirRecuperacao() {
+    setError("");
+    setMensagemRecuperacao("");
+    setCodigoRecuperacao(["", "", "", "", "", ""]);
+    setTelaAcesso("codigo");
+  }
+
+  function voltarParaLogin() {
+    setError("");
+    setMensagemRecuperacao("");
+    setTelaAcesso("login");
+  }
+
+  async function enviarCodigoRecuperacao() {
+    if (!email.includes("@")) {
+      setError("Informe um e-mail válido para receber o código.");
+      return;
+    }
+    setBusy(true); setError("");
+    try {
+      await requestPasswordReset(email);
+      setMensagemRecuperacao("Se este e-mail estiver cadastrado, o código foi enviado.");
+      window.setTimeout(() => inputsCodigo.current[0]?.focus(), 0);
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
+
+  function alterarCodigo(valor, indice) {
+    const digitos = valor.replace(/\D/g, "").slice(0, 6 - indice);
+    const proximoCodigo = [...codigoRecuperacao];
+    digitos.split("").forEach((digito, posicao) => { proximoCodigo[indice + posicao] = digito; });
+    if (!digitos) proximoCodigo[indice] = "";
+    setCodigoRecuperacao(proximoCodigo);
+
+    const proximoIndice = Math.min(indice + Math.max(digitos.length, 1), 5);
+    if (digitos) window.setTimeout(() => inputsCodigo.current[proximoIndice]?.focus(), 0);
+  }
+
+  function colarCodigo(evento) {
+    evento.preventDefault();
+    const digitos = evento.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6).split("");
+    if (!digitos.length) return;
+    setCodigoRecuperacao([...digitos, ...Array(6 - digitos.length).fill("")]);
+    window.setTimeout(() => inputsCodigo.current[Math.min(digitos.length, 5)]?.focus(), 0);
+  }
+
+  async function validarCodigo(evento) {
+    evento.preventDefault();
+    if (codigoRecuperacao.some((digito) => !digito)) {
+      setError("Preencha os seis dígitos do código.");
+      return;
+    }
+    setBusy(true); setError("");
+    try {
+      await verifyPasswordResetCode(email, codigoRecuperacao.join(""));
+      setTelaAcesso("nova-senha");
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
+
+  async function redefinirSenha(evento) {
+    evento.preventDefault();
+    if (novaSenha.length < 8) { setError("A nova senha precisa ter pelo menos 8 caracteres."); return; }
+    if (novaSenha !== confirmarSenha) { setError("As senhas não coincidem."); return; }
+    setBusy(true); setError("");
+    try {
+      await confirmPasswordReset(email, codigoRecuperacao.join(""), novaSenha);
+      setPassword(""); setNovaSenha(""); setConfirmarSenha("");
+      setMensagemRecuperacao("Senha redefinida com sucesso. Entre com a nova senha.");
+      setTelaAcesso("login");
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  }
   if (window.location.pathname === "/terminal") return <FacialTerminal/>;
   if (checking) return <main className="carregando-sessao" role="status">Verificando sessão...</main>;
   if (user) {
@@ -98,17 +178,20 @@ function App() {
           </p>
         </div>
 
-        <div className="relogio-destaque" aria-label="Relógio decorativo animado">
-          <span className="ponteiro ponteiro-horas" />
-          <span className="ponteiro ponteiro-minutos" />
-          <span className="miolo-relogio" />
-        </div>
+        <div className="ilustracao-login">
+          <div className="relogio-destaque" aria-label="Relógio decorativo animado">
+            <span className="ponteiro ponteiro-horas" />
+            <span className="ponteiro ponteiro-minutos" />
+            <span className="miolo-relogio" />
+          </div>
 
-        <img
-          className="pessoas-login"
-          src={pessoasLogin}
-          alt="Três colaboradores do TIMEID"
-        />
+          <img
+            className="pessoas-login"
+            src={pessoasLogin}
+            alt="Três colaboradores do TIMEID"
+          />
+          <span className="faixa-ilustracao" aria-hidden="true" />
+        </div>
 
         <div className="beneficios-login">
           <div className="beneficio-login">
@@ -132,12 +215,12 @@ function App() {
             </h1>
           </div>
 
-              <h2>Bem-vindo!</h2>
-
-              <p>Faça seu login para acessar o sistema.</p>
-
-              {error && <p className="mensagem-erro" role="alert">{error}</p>}
-              <form onSubmit={handleLogin}>
+          {telaAcesso === "login" && <>
+            <h2>Bem-vindo!</h2>
+            <p>Faça seu login para acessar o sistema.</p>
+            {error && <p className="mensagem-erro" role="alert">{error}</p>}
+            {mensagemRecuperacao && <p className="mensagem-sucesso" role="status">{mensagemRecuperacao}</p>}
+            <form onSubmit={handleLogin}>
                 <label className="rotulo-campo" htmlFor="email">E-mail</label>
                 <div className="campo-login">
                   <Mail aria-hidden="true" />
@@ -182,7 +265,7 @@ function App() {
                     Lembrar de mim
                   </label>
 
-                  <button type="button" className="link-senha">
+                  <button type="button" className="link-senha" onClick={abrirRecuperacao}>
                     Esqueceu a senha?
                   </button>
                 </div>
@@ -190,13 +273,79 @@ function App() {
                 <button type="submit" disabled={busy}>
                   {busy ? "Aguarde..." : "Entrar  →"}
                 </button>
-              </form>
+            </form>
+          </>}
 
-              <div className="acesso-seguro">
-                <span />
-                <p><ShieldCheck size={18} /> Acesso seguro — Seus dados protegidos.</p>
-                <span />
+          {telaAcesso === "codigo" && <section className="recuperar-senha">
+            <button type="button" className="voltar-login" onClick={voltarParaLogin}>← Voltar ao login</button>
+            <h2>Redefinir senha</h2>
+            <p>Digite o código de 6 dígitos enviado para o seu e-mail.</p>
+            {error && <p className="mensagem-erro" role="alert">{error}</p>}
+            <form onSubmit={validarCodigo}>
+              <label className="rotulo-campo" htmlFor="email-recuperacao">E-mail</label>
+              <div className="campo-login">
+                <Mail aria-hidden="true" />
+                <input
+                  type="email"
+                  id="email-recuperacao"
+                  autoComplete="email"
+                  required
+                  maxLength={254}
+                  value={email}
+                  onChange={(evento) => setEmail(evento.target.value)}
+                  placeholder="Digite seu e-mail"
+                />
               </div>
+              <button type="button" className="enviar-codigo" onClick={enviarCodigoRecuperacao} disabled={busy}>
+                {busy ? "Enviando..." : "Enviar código"}
+              </button>
+              {mensagemRecuperacao && <p className="mensagem-sucesso" role="status">{mensagemRecuperacao}</p>}
+              <div className="codigo-recuperacao" onPaste={colarCodigo} aria-label="Código de recuperação com seis dígitos">
+                {codigoRecuperacao.map((digito, indice) => <input
+                  key={indice}
+                  ref={(elemento) => { inputsCodigo.current[indice] = elemento; }}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete={indice === 0 ? "one-time-code" : "off"}
+                  maxLength={6}
+                  aria-label={`Dígito ${indice + 1} do código`}
+                  value={digito}
+                  onChange={(evento) => alterarCodigo(evento.target.value, indice)}
+                  onKeyDown={(evento) => {
+                    if (evento.key === "Backspace" && !digito && indice > 0) inputsCodigo.current[indice - 1]?.focus();
+                  }}
+                />)}
+              </div>
+              <button type="submit" disabled={busy}>{busy ? "Validando..." : "Confirmar código →"}</button>
+            </form>
+            <button type="button" className="reenviar-codigo" onClick={enviarCodigoRecuperacao} disabled={busy}>Não recebeu o código? Reenviar</button>
+          </section>}
+
+          {telaAcesso === "nova-senha" && <section className="recuperar-senha">
+            <button type="button" className="voltar-login" onClick={() => { setError(""); setTelaAcesso("codigo"); }}>← Alterar código</button>
+            <h2>Crie uma nova senha</h2>
+            <p>Escolha uma senha forte para proteger sua conta.</p>
+            {error && <p className="mensagem-erro" role="alert">{error}</p>}
+            <form onSubmit={redefinirSenha}>
+              <label className="rotulo-campo" htmlFor="nova-senha">Nova senha</label>
+              <div className="campo-login">
+                <LockKeyhole aria-hidden="true" />
+                <input type="password" id="nova-senha" autoComplete="new-password" minLength={8} required value={novaSenha} onChange={(evento) => setNovaSenha(evento.target.value)} placeholder="Digite a nova senha" />
+              </div>
+              <label className="rotulo-campo" htmlFor="confirmar-senha">Confirme a nova senha</label>
+              <div className="campo-login">
+                <LockKeyhole aria-hidden="true" />
+                <input type="password" id="confirmar-senha" autoComplete="new-password" minLength={8} required value={confirmarSenha} onChange={(evento) => setConfirmarSenha(evento.target.value)} placeholder="Repita a nova senha" />
+              </div>
+              <button type="submit" disabled={busy}>{busy ? "Redefinindo..." : "Redefinir senha →"}</button>
+            </form>
+          </section>}
+
+          <div className="acesso-seguro">
+            <span />
+            <p><ShieldCheck size={18} /> Acesso seguro — Seus dados protegidos.</p>
+            <span />
+          </div>
 
         </div>
       </section>

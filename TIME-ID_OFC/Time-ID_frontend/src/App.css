@@ -1109,6 +1109,76 @@ body {
   animation-play-state: running !important;
 }
 
+/* Relógio, pessoas e faixa pertencem ao mesmo bloco visual. */
+@media (min-width: 641px) {
+  .ilustracao-login {
+    position: absolute;
+    z-index: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: clamp(360px, 48vh, 500px);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .ilustracao-login .relogio-destaque {
+    position: absolute;
+    z-index: 1;
+    top: 9%;
+    right: clamp(14px, 4vw, 62px);
+    bottom: auto;
+    width: clamp(190px, 20vw, 315px);
+    pointer-events: auto;
+  }
+
+  .ilustracao-login .pessoas-login {
+    position: absolute;
+    z-index: 2;
+    top: clamp(45px, 10%, 76px);
+    right: auto;
+    bottom: auto;
+    left: clamp(8px, 2vw, 34px);
+    width: min(78%, 620px);
+    max-width: none;
+    height: auto !important;
+  }
+
+  .faixa-ilustracao {
+    position: absolute;
+    z-index: 3;
+    bottom: -225px;
+    left: -21%;
+    width: 138%;
+    height: 355px;
+    border-top: 1px solid rgba(39, 255, 170, 0.95);
+    border-radius: 50% 50% 0 0 / 43% 43% 0 0;
+    background:
+      radial-gradient(ellipse at 20% 12%, rgba(16, 255, 151, 0.3), transparent 46%),
+      linear-gradient(132deg, rgba(0, 115, 69, 0.96), rgba(0, 49, 33, 0.98));
+    box-shadow: inset 0 20px 45px rgba(0, 255, 148, 0.08);
+  }
+
+  .lado-esquerdo::before { display: none; }
+}
+
+/* Mantém os dois painéis juntos até em zoom alto no notebook. */
+@media (min-width: 900px) and (max-width: 980px) {
+  .pagina-login {
+    grid-template-columns: minmax(0, 1.12fr) minmax(400px, 0.88fr);
+    overflow: hidden;
+  }
+
+  .lado-esquerdo,
+  .lado-direito {
+    width: auto;
+    min-height: 100dvh;
+    height: 100dvh;
+  }
+
+  .lado-direito { padding: 28px 24px; }
+}
+
 /* Ajuste final para a resolução da tela: nada deve se sobrepor. */
 @media (min-width: 981px) {
   .opcoes-login {
@@ -1120,6 +1190,65 @@ body {
 }
 
 /* Sombras e brilhos finais, inspirados no visual verde da referência. */
+.recuperar-senha { text-align: center; }
+.recuperar-senha h2 { margin-top: 18px; }
+.recuperar-senha > p { max-width: 390px; margin: 8px auto 26px; }
+.recuperar-senha form { display: flex; flex-direction: column; gap: 12px; }
+
+.voltar-login,
+.reenviar-codigo {
+  width: auto !important;
+  min-height: auto !important;
+  padding: 0 !important;
+  color: #2cffaf !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+}
+
+.voltar-login { display: inline-flex; margin-right: auto; }
+.reenviar-codigo { margin-top: 22px; text-decoration: underline; text-underline-offset: 4px; }
+
+.enviar-codigo { min-height: 46px !important; }
+
+.mensagem-sucesso {
+  margin: -3px 0 2px !important;
+  color: #74ffc3 !important;
+  font-size: 13px !important;
+  font-weight: 700;
+}
+
+.codigo-recuperacao {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(7px, 1vw, 13px);
+  max-width: 420px;
+  margin: 8px auto 14px;
+}
+
+.codigo-recuperacao input {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 50px;
+  padding: 0 !important;
+  border: 1px solid rgba(138, 255, 201, 0.46);
+  border-radius: 12px;
+  color: #f4fff9;
+  background: rgba(0, 25, 18, 0.62);
+  font-size: clamp(22px, 2vw, 30px);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.codigo-recuperacao input:focus {
+  border-color: #2cffaf;
+  box-shadow: 0 0 0 3px rgba(44, 255, 175, 0.17), 0 0 22px rgba(44, 255, 175, 0.14);
+  transform: translateY(-2px);
+}
+
 .lado-esquerdo::after {
   z-index: 0;
   inset: 0;
@@ -1170,6 +1299,37 @@ body {
 }
 
 /* Impede que o preenchimento automático do navegador deixe os campos brancos. */
+.card-login {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: center;
+}
+
+.marca-card {
+  width: fit-content;
+  margin-right: auto;
+  margin-left: auto;
+  justify-content: center;
+  align-items: center;
+}
+
+.marca-card .icone-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.marca-card h1 {
+  margin: 0;
+  line-height: 1;
+}
+
+.card-login form { width: 100%; }
+.card-login .rotulo-campo { text-align: left; }
+.acesso-seguro { width: 100%; }
+
 .card-login input,
 .login-code input {
   color: #f4fff9;

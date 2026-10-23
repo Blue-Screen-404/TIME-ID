@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TimeId.Operations;
 
 [ApiController]
 [Route("api/auth")]
@@ -39,6 +40,31 @@ public class AuthController : ControllerBase
             new ClaimsPrincipal(identity),
             new AuthenticationProperties { IsPersistent = false });
         return Ok(user);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("password-reset/request")]
+    public async Task<IActionResult> RequestPasswordReset(PasswordResetRequest request)
+    {
+        await service.RequestPasswordResetAsync(request.Email);
+        // A resposta é igual para todos os e-mails para não revelar contas cadastradas.
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("password-reset/verify")]
+    public IActionResult VerifyPasswordReset(PasswordResetVerification request)
+    {
+        service.VerifyPasswordResetCode(request.Email, request.Code);
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("password-reset/confirm")]
+    public IActionResult ConfirmPasswordReset(PasswordResetConfirmation request)
+    {
+        service.ResetPassword(request.Email, request.Code, request.NewPassword);
+        return NoContent();
     }
 
     [Authorize]

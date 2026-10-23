@@ -25,6 +25,7 @@ public class Program
             Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys")));
         if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
         builder.Services.AddSingleton<DataStore>();
+        builder.Services.AddSingleton<PasswordResetEmailService>();
         builder.Services.AddSingleton<AuthenticationService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>

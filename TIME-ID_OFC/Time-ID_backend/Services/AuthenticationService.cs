@@ -1,7 +1,9 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
 using TimeId.Operations;
 
-public class AuthenticationService(DataStore store)
+public class AuthenticationService(DataStore store, PasswordResetEmailService passwordResetEmail)
 {
     private readonly PasswordHasher<Account> hasher = new();
     public string SessionStamp { get; } = Guid.NewGuid().ToString();
@@ -40,6 +42,82 @@ public class AuthenticationService(DataStore store)
         DataStore.Log(db, user, "Editou", "Perfil", "Dados do próprio perfil atualizados.");
         return ToResponse(user);
     });
+
+    public async Task RequestPasswordResetAsync(string email)
+    {
+        ResetEmail? reset = store.Write(db =>
+        {
+            Account? user = db.Accounts.FirstOrDefault(account =>
+                account.Active && account.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (user is null) return null;
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            if (user.PasswordResetLastSentAt is not null && now - user.PasswordResetLastSentAt < TimeSpan.FromMinutes(1))
+                return null;
+
+            string code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+            user.PasswordResetHash = ResetCodeHash(user.Id, code);
+            user.PasswordResetExpiresAt = now.AddMinutes(15);
+            user.PasswordResetLastSentAt = now;
+            user.PasswordResetAttempts = 0;
+            return new ResetEmail(user.Email, code);
+        });
+
+        if (reset is not null) await passwordResetEmail.SendAsync(reset.Email, reset.Code);
+    }
+
+    public void VerifyPasswordResetCode(string email, string code)
+    {
+        store.Write(db =>
+        {
+            Account? user = db.Accounts.FirstOrDefault(account =>
+                account.Active && account.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (!IsValidResetCode(user, code)) throw new DomainError(400, "Código inválido ou expirado.");
+            return 0;
+        });
+    }
+
+    public void ResetPassword(string email, string code, string newPassword)
+    {
+        store.Write(db =>
+        {
+            Account? user = db.Accounts.FirstOrDefault(account =>
+                account.Active && account.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (!IsValidResetCode(user, code)) throw new DomainError(400, "Código inválido ou expirado.");
+
+            user!.PasswordHash = hasher.HashPassword(user, newPassword);
+            user.PasswordResetHash = null;
+            user.PasswordResetExpiresAt = null;
+            user.PasswordResetLastSentAt = null;
+            user.PasswordResetAttempts = 0;
+            user.SecurityStamp = Guid.NewGuid().ToString();
+            DataStore.Log(db, user, "Redefiniu", "Senha", "Senha redefinida por código enviado por e-mail.");
+            return 0;
+        });
+    }
+
+    private static string ResetCodeHash(Guid accountId, string code) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{accountId:N}:{code}")));
+
+    private static bool IsValidResetCode(Account? user, string code)
+    {
+        if (user?.PasswordResetHash is null || user.PasswordResetExpiresAt is null ||
+            user.PasswordResetExpiresAt <= DateTimeOffset.UtcNow || user.PasswordResetAttempts >= 5)
+            return false;
+
+        user.PasswordResetAttempts++;
+        string hash = ResetCodeHash(user.Id, code);
+        bool valid = CryptographicOperations.FixedTimeEquals(
+            Convert.FromHexString(user.PasswordResetHash), Convert.FromHexString(hash));
+        if (!valid && user.PasswordResetAttempts >= 5)
+        {
+            user.PasswordResetHash = null;
+            user.PasswordResetExpiresAt = null;
+        }
+        return valid;
+    }
+
+    private sealed record ResetEmail(string Email, string Code);
 
     private static void ValidatePhoto(string? photo)
     {
