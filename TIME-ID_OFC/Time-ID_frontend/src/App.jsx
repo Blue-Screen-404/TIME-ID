@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { login, getCurrentUser, logout } from "./services/auth";
+import { LockKeyhole, Mail, ShieldCheck, UsersRound } from "lucide-react";
+import pessoasLogin from "./assets/pessoas-login.png";
 import "./App.css";
-import iconeUsuario from "./assets/icone-usuario.png";
-import iconeSenha from "./assets/icone-senha.png";
 import Workspace from "./workspace/Workspace";
 import { FacialTerminal } from "./workspace/Facial";
 
 function App() {
   const [paginaAtual, setPaginaAtual] = useState(window.location.pathname);
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -38,7 +37,7 @@ function App() {
     }
     function onHistory() { setPaginaAtual(window.location.pathname); checkSession(); }
     function onVisible() { if (document.visibilityState === "visible") checkSession(); }
-    function onExpired() { setUser(null); setPassword(""); setCode(""); navegar("login", true); }
+    function onExpired() { setUser(null); setPassword(""); navegar("login", true); }
     window.addEventListener("timeid:expired", onExpired);
     checkSession();
     const interval = window.setInterval(checkSession, 60000);
@@ -57,13 +56,13 @@ function App() {
 
   async function handleLogin(event) {
     event.preventDefault(); setBusy(true); setError("");
-    try { setUser(await login(email, password, code)); setPassword(""); setCode(""); navegar("inicio", true); }
+    try { setUser(await login(email, password)); setPassword(""); navegar("inicio", true); }
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
   async function handleLogout() {
     setBusy(true); setError("");
-    try { await logout(); setUser(null); setPassword(""); setCode(""); navegar("login", true); }
+    try { await logout(); setUser(null); setPassword(""); navegar("login", true); }
     catch (err) { setError(err.message); }
     finally { setBusy(false); }
   }
@@ -76,7 +75,7 @@ function App() {
     <main className="pagina-login">
       <section className="lado-esquerdo">
         <div className="marca">
-          <span className="icone-logo">◷</span>
+          <span className="icone-logo" aria-hidden="true">◷</span>
 
           <h1>
             TIME<strong>ID</strong>
@@ -85,21 +84,46 @@ function App() {
 
         <div className="apresentacao">
           <h2>
-            Mais controle, mais pessoas,
+            Mais controle,
             <br />
-            mais resultados.
+            Mais tempo para o
+            <br />
+            <strong>que importa.</strong>
           </h2>
 
           <p>
-            Sistema de ponto e gestão de pessoas
+            Sistema de ponto e <strong>gestão de pessoas</strong>
             <br />
-            para empresas de todos os tamanhos.
+            para empresas de <strong>todos os tamanhos.</strong>
           </p>
+        </div>
+
+        <div className="relogio-destaque" aria-label="Relógio decorativo animado">
+          <span className="ponteiro ponteiro-horas" />
+          <span className="ponteiro ponteiro-minutos" />
+          <span className="miolo-relogio" />
+        </div>
+
+        <img
+          className="pessoas-login"
+          src={pessoasLogin}
+          alt="Três colaboradores do TIMEID"
+        />
+
+        <div className="beneficios-login">
+          <div className="beneficio-login">
+            <ShieldCheck size={30} aria-hidden="true" />
+            <p><strong>Segurança e confiabilidade</strong><span>Seus dados protegidos em todas as etapas.</span></p>
+          </div>
+          <div className="beneficio-login">
+            <UsersRound size={30} aria-hidden="true" />
+            <p><strong>Mais de 1M+ de usuários</strong><span>Em empresas de todo o Brasil</span></p>
+          </div>
         </div>
       </section>
 
       <section className="lado-direito">
-        <div className="card-login">
+        <div className="card-login" id="form-login">
           <div className="marca-card">
             <span className="icone-logo">◷</span>
 
@@ -114,11 +138,13 @@ function App() {
 
               {error && <p className="mensagem-erro" role="alert">{error}</p>}
               <form onSubmit={handleLogin}>
+                <label className="rotulo-campo" htmlFor="email">E-mail</label>
                 <div className="campo-login">
-                  <img src={iconeUsuario} alt="" />
+                  <Mail aria-hidden="true" />
 
                   <input
                     type="email"
+                    id="email"
                     name="email"
                     aria-label="E-mail"
                     autoComplete="username"
@@ -131,11 +157,13 @@ function App() {
                   />
                 </div>
 
+                <label className="rotulo-campo" htmlFor="senha">Senha</label>
                 <div className="campo-login">
-                  <img src={iconeSenha} alt="" />
+                  <LockKeyhole aria-hidden="true" />
 
                   <input
                     type="password"
+                    id="senha"
                     name="password"
                     aria-label="Senha"
                     autoComplete="current-password"
@@ -148,11 +176,27 @@ function App() {
                   />
                 </div>
 
-                <label className="login-code">Código de autenticação (se ativado)<input type="text" autoComplete="one-time-code" maxLength={64} value={code} onChange={e => setCode(e.target.value)} placeholder="Código do app ou de recuperação" disabled={busy}/><small>Preencha apenas se ativou a autenticação em duas etapas nas configurações.</small></label>
+                <div className="opcoes-login">
+                  <label>
+                    <input type="checkbox" />
+                    Lembrar de mim
+                  </label>
+
+                  <button type="button" className="link-senha">
+                    Esqueceu a senha?
+                  </button>
+                </div>
+
                 <button type="submit" disabled={busy}>
-                  {busy ? "Aguarde..." : "Entrar"}
+                  {busy ? "Aguarde..." : "Entrar  →"}
                 </button>
               </form>
+
+              <div className="acesso-seguro">
+                <span />
+                <p><ShieldCheck size={18} /> Acesso seguro — Seus dados protegidos.</p>
+                <span />
+              </div>
 
         </div>
       </section>
