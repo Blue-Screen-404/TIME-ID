@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { confirmPasswordReset, getCurrentUser, login, logout, requestPasswordReset, verifyPasswordResetCode } from "./services/auth";
 import { LockKeyhole, Mail, ShieldCheck, UsersRound } from "lucide-react";
+import logoTimeId from "./assets/logo-timeid-esmeralda.png";
 import pessoasLogin from "./assets/pessoas-login.png";
 import "./App.css";
 import Workspace from "./workspace/Workspace";
@@ -155,11 +156,7 @@ function App() {
     <main className="pagina-login">
       <section className="lado-esquerdo">
         <div className="marca">
-          <span className="icone-logo" aria-hidden="true">◷</span>
-
-          <h1>
-            TIME<strong>ID</strong>
-          </h1>
+          <img className="logo-timeid logo-timeid-esquerda" src={logoTimeId} alt="TIMEID — sua jornada, nosso controle" />
         </div>
 
         <div className="apresentacao">
@@ -208,11 +205,7 @@ function App() {
       <section className="lado-direito">
         <div className="card-login" id="form-login">
           <div className="marca-card">
-            <span className="icone-logo">◷</span>
-
-            <h1>
-              TIME<strong>ID</strong>
-            </h1>
+            <img className="logo-timeid logo-timeid-card" src={logoTimeId} alt="TIMEID — sua jornada, nosso controle" />
           </div>
 
           {telaAcesso === "login" && <>
