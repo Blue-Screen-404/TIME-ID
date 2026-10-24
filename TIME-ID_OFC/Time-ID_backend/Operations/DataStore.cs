@@ -5,7 +5,7 @@ namespace TimeId.Operations;
 
 // Armazenamento local de uma única instância. As mutações são validadas em uma cópia
 // e gravadas por substituição atômica antes de publicar o novo estado em memória.
-public class DataStore
+public class DataStore : IWorkspaceStore
 {
     private readonly object gate = new();
     private readonly string path;

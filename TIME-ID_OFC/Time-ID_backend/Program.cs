@@ -1,4 +1,5 @@
 using TimeId.Operations;
+using TimeId.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
@@ -25,6 +26,9 @@ public class Program
             Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys")));
         if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
         builder.Services.AddSingleton<DataStore>();
+        builder.Services.AddSingleton<IWorkspaceStore>(services => services.GetRequiredService<DataStore>());
+        builder.Services.AddSingleton<PunchService>();
+        builder.Services.AddSingleton<VacationService>();
         builder.Services.AddSingleton<AuthenticationService>();
         builder.Services.AddSingleton<InMemoryEmployeeRepository>();
         builder.Services.AddSingleton<InMemoryDepartmentRepository>();
