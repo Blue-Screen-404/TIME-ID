@@ -21,6 +21,17 @@ function App() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   const inputsCodigo = useRef([]);
+  const relogioRef = useRef(null);
+
+  function ajustarVelocidadeRelogio(velocidade) {
+    const ponteiros = relogioRef.current?.querySelectorAll(".ponteiro") ?? [];
+    ponteiros.forEach((ponteiro) => {
+      ponteiro.getAnimations().forEach((animacao) => {
+        animacao.playbackRate = velocidade;
+        animacao.play();
+      });
+    });
+  }
 
   function navegar(para, replace = false) {
     const path = `/${para}`;
@@ -176,7 +187,13 @@ function App() {
         </div>
 
         <div className="ilustracao-login">
-          <div className="relogio-destaque" aria-label="Relógio decorativo animado">
+          <div
+            ref={relogioRef}
+            className="relogio-destaque"
+            aria-label="Relógio decorativo animado"
+            onMouseEnter={() => ajustarVelocidadeRelogio(2.5)}
+            onMouseLeave={() => ajustarVelocidadeRelogio(1)}
+          >
             <span className="ponteiro ponteiro-horas" />
             <span className="ponteiro ponteiro-minutos" />
             <span className="miolo-relogio" />
@@ -197,7 +214,7 @@ function App() {
           </div>
           <div className="beneficio-login">
             <UsersRound size={30} aria-hidden="true" />
-            <p><strong>Mais de 1M+ de usuários</strong><span>Em empresas de todo o Brasil</span></p>
+            <p><strong>Gestão em um só lugar</strong><span>Organize sua equipe com mais praticidade.</span></p>
           </div>
         </div>
       </section>

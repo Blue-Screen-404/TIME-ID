@@ -982,7 +982,7 @@ body {
   z-index: 4;
   display: flex;
   align-items: flex-start;
-  gap: clamp(22px, 4vw, 70px);
+  gap: clamp(16px, 2.6vw, 42px);
   bottom: clamp(24px, 4.2vh, 52px);
   left: clamp(42px, 8.3vw, 134px);
 }
@@ -990,7 +990,7 @@ body {
 .beneficio-login {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 6px;
   color: #12f29a;
 }
 
@@ -1498,3 +1498,65 @@ body {
   filter: drop-shadow(0 0 20px rgba(0, 255, 144, 0.32)) drop-shadow(0 18px 35px rgba(0, 0, 0, 0.4));
   transform: none;
 }
+
+/* A animação é contínua e acelera quando o relógio recebe o mouse. */
+.relogio-destaque .ponteiro-horas {
+  animation-name: girar-horas !important;
+  animation-duration: 18s !important;
+  animation-timing-function: linear !important;
+  animation-iteration-count: infinite !important;
+  animation-play-state: running !important;
+}
+
+.relogio-destaque .ponteiro-minutos {
+  animation-name: girar-minutos !important;
+  animation-duration: 9s !important;
+  animation-timing-function: linear !important;
+  animation-iteration-count: infinite !important;
+  animation-play-state: running !important;
+}
+
+/* O JavaScript muda playbackRate no hover, sem reiniciar o ciclo da animação. */
+
+/* Em telas estreitas ou com zoom, os painéis viram uma única coluna organizada. */
+@media (max-width: 1100px) {
+  .pagina-login {
+    grid-template-columns: minmax(0, 1fr) !important;
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  .lado-esquerdo {
+    min-height: 610px;
+    height: 610px;
+    padding: 34px clamp(26px, 7vw, 78px);
+    overflow: hidden;
+  }
+
+  .lado-direito {
+    min-height: auto;
+    height: auto;
+    padding: clamp(28px, 5vw, 52px) clamp(16px, 6vw, 42px);
+  }
+
+  .marca { z-index: 4; }
+  .logo-timeid-esquerda { width: clamp(145px, 21vw, 200px); }
+  .apresentacao { z-index: 4; margin-top: 0 !important; max-width: min(480px, 74%); }
+  .apresentacao h2 { font-size: clamp(31px, 5vw, 45px); }
+  .pessoas-login { top: auto; bottom: 48px; width: min(70%, 530px); }
+  .relogio-destaque { top: auto; bottom: 64px; }
+  .beneficios-login { bottom: 20px; }
+}
+
+@media (max-width: 640px) {
+  .lado-esquerdo { min-height: 560px; height: 560px; padding: 26px 24px; }
+  .logo-timeid-esquerda { width: 150px; }
+  .apresentacao { max-width: 82%; }
+  .apresentacao h2 { font-size: clamp(27px, 8vw, 36px); }
+  .apresentacao p { font-size: 14px; }
+  .pessoas-login { width: min(92%, 430px); bottom: 57px; left: 2%; }
+  .relogio-destaque { width: 180px; right: -12px; bottom: 86px; }
+  .beneficios-login { left: 24px; bottom: 17px; gap: 12px; }
+}
+
