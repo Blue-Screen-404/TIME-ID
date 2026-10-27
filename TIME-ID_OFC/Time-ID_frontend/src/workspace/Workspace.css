@@ -373,3 +373,377 @@ button.setting-row:hover { background:var(--soft); }
   :root[data-theme="escuro"] .sidebar-logo img { width: 112px; }
   :root[data-theme="escuro"] .work-app .menu-lateral footer { font-size: 10px; }
 }
+
+/* Em telas mais baixas, a área principal fica mais compacta para o painel
+   aparecer inteiro, sem alterar o tamanho nem a posição da sidebar. */
+@media (min-width: 721px) and (max-height: 820px) {
+  :root[data-theme="escuro"] .workspace-header {
+    min-height: 72px;
+    padding: 10px 24px;
+  }
+
+  :root[data-theme="escuro"] .workspace-content {
+    padding: 16px 22px;
+  }
+
+  :root[data-theme="escuro"] .welcome {
+    margin-bottom: 14px;
+  }
+
+  :root[data-theme="escuro"] .welcome-icon,
+  :root[data-theme="escuro"] .stat-icon {
+    padding: 10px;
+  }
+
+  :root[data-theme="escuro"] .welcome-icon svg { width: 25px; height: 25px; }
+
+  :root[data-theme="escuro"] .stats-grid {
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  :root[data-theme="escuro"] .stat {
+    min-height: 94px;
+    padding: 13px;
+    gap: 11px;
+  }
+
+  :root[data-theme="escuro"] .stat strong {
+    margin-bottom: 2px;
+    font-size: 24px;
+  }
+
+  :root[data-theme="escuro"] .work-columns { gap: 16px; }
+
+  :root[data-theme="escuro"] .work-card {
+    padding: 15px;
+    margin-bottom: 14px;
+  }
+
+  :root[data-theme="escuro"] .card-heading { margin-bottom: 11px; }
+  :root[data-theme="escuro"] .work-table th,
+  :root[data-theme="escuro"] .work-table td { padding: 9px 10px; }
+  :root[data-theme="escuro"] .empty-state { padding: 22px 14px; }
+
+  :root[data-theme="escuro"] .activity-list li { padding: 8px 0; }
+
+  :root[data-theme="escuro"] .security-tile {
+    min-height: 142px;
+    padding: 18px;
+  }
+
+  :root[data-theme="escuro"] .security-tile svg { margin-bottom: 7px; }
+  :root[data-theme="escuro"] .security-tile h3 { margin-bottom: 6px; }
+}
+
+/* A sidebar permanece fixa; somente o conteúdo da área principal pode rolar.
+   A barra continua funcionando, mas fica visualmente escondida. */
+@media (min-width: 721px) {
+  :root[data-theme="escuro"] .workspace-main {
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :root[data-theme="escuro"] .workspace-main::-webkit-scrollbar {
+    display: none;
+  }
+
+  :root[data-theme="escuro"] .workspace-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+}
+
+/* Polimento visual compartilhado pelas telas internas. */
+:root[data-theme="escuro"] .workspace-content {
+  background:
+    radial-gradient(circle at 82% 5%, rgba(36, 221, 137, 0.075), transparent 26%),
+    radial-gradient(circle at 12% 92%, rgba(0, 132, 95, 0.06), transparent 30%);
+}
+
+:root[data-theme="escuro"] .work-heading h2,
+:root[data-theme="escuro"] .welcome .work-heading h2 {
+  letter-spacing: -0.5px;
+}
+
+:root[data-theme="escuro"] .work-card,
+:root[data-theme="escuro"] .stat,
+:root[data-theme="escuro"] .department-card,
+:root[data-theme="escuro"] .report-option {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:root[data-theme="escuro"] .stat:hover,
+:root[data-theme="escuro"] .department-card:hover,
+:root[data-theme="escuro"] .report-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(62, 242, 160, 0.08);
+}
+
+:root[data-theme="escuro"] .work-card:hover {
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.25), inset 0 1px rgba(200, 255, 226, 0.05);
+}
+
+:root[data-theme="escuro"] .text-button,
+:root[data-theme="escuro"] .icon-button,
+:root[data-theme="escuro"] .btn {
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+:root[data-theme="escuro"] .text-button:hover,
+:root[data-theme="escuro"] .icon-button:hover { transform: translateY(-1px); }
+
+:root[data-theme="escuro"] .btn.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 13px 28px rgba(37, 246, 151, 0.28);
+}
+
+:root[data-theme="escuro"] .global-search:focus-within {
+  border-color: rgba(65, 245, 164, 0.72);
+  box-shadow: 0 0 0 4px rgba(49, 239, 153, 0.08);
+}
+
+:root[data-theme="escuro"] .work-table tbody tr {
+  transition: background-color 0.16s ease;
+}
+
+/* Modo claro: fundo leve e verde mais suave, preservando o contraste do texto. */
+:root[data-theme="claro"] {
+  color-scheme: light;
+  --canvas: #bfe7cf;
+  --surface: #ccefd9;
+  --ink: #103b2c;
+  --subtle: #4d715f;
+  --line: #97cfaf;
+  --green: #117d55;
+  --soft: #aee1c2;
+}
+
+:root[data-theme="claro"] body,
+:root[data-theme="claro"] .work-app {
+  background: radial-gradient(circle at 82% 8%, rgba(65, 188, 117, 0.26), transparent 28%), #bfe7cf;
+}
+
+:root[data-theme="claro"] .work-app .menu-lateral {
+  color: #effff6;
+  flex: 0 0 232px;
+  width: 232px;
+  min-height: 100vh;
+  border-right: 1px solid #116545;
+  background: linear-gradient(170deg, #19865e, #116e4d 55%, #095038);
+}
+
+:root[data-theme="claro"] .sidebar-logo {
+  display: block;
+  padding: 4px 12px 12px;
+  border-bottom: 1px solid rgba(221, 255, 237, 0.24);
+}
+
+:root[data-theme="claro"] .sidebar-logo img {
+  filter: drop-shadow(0 2px 4px rgba(0, 45, 30, 0.23));
+}
+
+:root[data-theme="claro"] .work-app .menu-lateral nav a { color: #edfff5; }
+:root[data-theme="claro"] .work-app .menu-lateral nav a:hover { background: rgba(224, 255, 238, 0.16); }
+
+:root[data-theme="claro"] .work-app .menu-lateral nav a.menu-ativo {
+  color: #093c2a;
+  background: linear-gradient(105deg, #42d88b, #83eab1);
+  box-shadow: 0 9px 20px rgba(0, 55, 35, 0.2);
+}
+
+:root[data-theme="claro"] .work-app .menu-lateral footer {
+  color: #c7ead7;
+  border-color: rgba(221, 255, 237, 0.22);
+}
+
+:root[data-theme="claro"] .work-app .botao-sair {
+  color: #effff6;
+  border-color: rgba(239, 255, 246, 0.78);
+}
+
+/* O modo claro mantém a mesma estrutura do escuro: menu completo e fixo. */
+@media (min-width: 721px) {
+  :root[data-theme="claro"] .work-app .menu-lateral {
+    padding: 10px 12px;
+    overflow: hidden;
+  }
+
+  :root[data-theme="claro"] .sidebar-logo { padding: 0 12px 7px; }
+  :root[data-theme="claro"] .sidebar-logo img { width: 128px; }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav {
+    margin-top: 7px;
+    gap: 2px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav a {
+    min-height: 38px;
+    padding: 8px 12px;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav a svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral footer {
+    margin-top: auto;
+    padding: 8px 12px 0;
+    font-size: 11px;
+  }
+
+  :root[data-theme="claro"] .work-app .botao-sair {
+    margin-top: 5px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+
+  :root[data-theme="claro"] .workspace-main {
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :root[data-theme="claro"] .workspace-main::-webkit-scrollbar { display: none; }
+  :root[data-theme="claro"] .workspace-header { position: sticky; top: 0; z-index: 20; }
+}
+
+@media (min-width: 721px) and (max-height: 760px) {
+  :root[data-theme="claro"] .work-app .menu-lateral nav a {
+    min-height: 36px;
+    padding: 7px 10px;
+    gap: 11px;
+    font-size: 13px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav a svg { width: 18px; height: 18px; }
+  :root[data-theme="claro"] .sidebar-logo img { width: 112px; }
+  :root[data-theme="claro"] .work-app .menu-lateral footer { font-size: 10px; }
+}
+
+/* Acabamentos do modo claro: mais profundidade, sem introduzir branco. */
+:root[data-theme="claro"] .workspace-content {
+  background:
+    radial-gradient(circle at 90% 2%, rgba(22, 155, 91, 0.16), transparent 25%),
+    radial-gradient(circle at 8% 96%, rgba(33, 173, 103, 0.12), transparent 30%);
+}
+
+:root[data-theme="claro"] .work-card,
+:root[data-theme="claro"] .stat,
+:root[data-theme="claro"] .department-card,
+:root[data-theme="claro"] .report-option {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:root[data-theme="claro"] .stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(22, 157, 91, 0.75), transparent);
+}
+
+:root[data-theme="claro"] .work-card:hover,
+:root[data-theme="claro"] .stat:hover,
+:root[data-theme="claro"] .department-card:hover,
+:root[data-theme="claro"] .report-option:hover {
+  transform: translateY(-3px);
+  border-color: #68bb8c;
+  box-shadow: 0 17px 32px rgba(18, 105, 64, 0.16);
+}
+
+:root[data-theme="claro"] .welcome-icon,
+:root[data-theme="claro"] .stat-icon {
+  box-shadow: inset 0 1px rgba(191, 247, 213, 0.55), 0 6px 13px rgba(18, 126, 76, 0.1);
+}
+
+:root[data-theme="claro"] .global-search:focus-within {
+  border-color: #38aa70;
+  box-shadow: 0 0 0 4px rgba(30, 166, 96, 0.15);
+}
+
+:root[data-theme="claro"] .btn.primary {
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+}
+
+:root[data-theme="claro"] .btn.primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+  box-shadow: 0 13px 25px rgba(18, 137, 84, 0.3);
+}
+
+:root[data-theme="claro"] .text-button,
+:root[data-theme="claro"] .icon-button { transition: transform 0.16s ease, background-color 0.16s ease; }
+:root[data-theme="claro"] .text-button:hover,
+:root[data-theme="claro"] .icon-button:hover { transform: translateY(-1px); }
+
+:root[data-theme="claro"] .workspace-header {
+  background: rgba(195, 232, 210, 0.94);
+  border-color: #97cfaf;
+  box-shadow: 0 5px 20px rgba(21, 92, 61, 0.06);
+}
+
+:root[data-theme="claro"] .global-search {
+  border: 1px solid #8fcaa7;
+  background: #aee0c0;
+}
+
+:root[data-theme="claro"] .work-card,
+:root[data-theme="claro"] .stat,
+:root[data-theme="claro"] .department-card,
+:root[data-theme="claro"] .report-option {
+  background: linear-gradient(145deg, #d7f2e2, #b9e5cc);
+  border-color: #97cfaf;
+  box-shadow: 0 10px 26px rgba(26, 95, 65, 0.07);
+}
+
+:root[data-theme="claro"] .work-card:hover,
+:root[data-theme="claro"] .stat:hover,
+:root[data-theme="claro"] .department-card:hover {
+  border-color: #82d9ac;
+  box-shadow: 0 14px 30px rgba(26, 132, 83, 0.12);
+}
+
+:root[data-theme="claro"] .welcome-icon,
+:root[data-theme="claro"] .stat-icon {
+  color: #118b5d;
+  background: radial-gradient(circle at 30% 25%, #d7ffea, #c5f2d8);
+}
+
+:root[data-theme="claro"] .btn.primary {
+  color: #ffffff;
+  background: linear-gradient(105deg, #18a86f, #5ad996);
+  box-shadow: 0 9px 20px rgba(33, 166, 105, 0.2);
+}
+
+:root[data-theme="claro"] .work-table th { background: #a7dcbc; }
+:root[data-theme="claro"] .work-table tbody tr:hover { background: #c8ecd7; }
+:root[data-theme="claro"] .security-tile { background: linear-gradient(140deg, #0c6a4d, #159661); }
+
+:root[data-theme="claro"] .work-field input,
+:root[data-theme="claro"] .work-field select,
+:root[data-theme="claro"] .work-field textarea,
+:root[data-theme="claro"] .filters input,
+:root[data-theme="claro"] .filters select,
+:root[data-theme="claro"] .setting-row select,
+:root[data-theme="claro"] .btn.secondary {
+  background: #c8ecd7;
+  border-color: #8fcaa7;
+  color: #103d2d;
+}

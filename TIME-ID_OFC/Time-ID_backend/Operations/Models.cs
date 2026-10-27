@@ -34,7 +34,7 @@ public class Account
     public DateTimeOffset? PasswordResetLastSentAt { get; set; }
     public int PasswordResetAttempts { get; set; }
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString();
-    public string Theme { get; set; } = "claro";
+    public string Theme { get; set; } = "escuro";
     public bool Notifications { get; set; } = true;
 }
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
@@ -161,7 +161,7 @@ public class Company
 public record Change(Guid Id, DateTimeOffset At, Guid ActorId, string Actor, string Action, string Entity, string Detail);
 public class Preferences
 {
-    [RegularExpression("^(claro|escuro)$")] public string Theme { get; set; } = "claro";
+    [RegularExpression("^(claro|escuro)$")] public string Theme { get; set; } = "escuro";
     public bool Notifications { get; set; } = true;
 }
 public class PasswordChange

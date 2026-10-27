@@ -32,7 +32,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  const refresh=useCallback(async()=>{const next=await api();setData(next);setLoadError("");},[]);
  useEffect(()=>{let active=true;const load=()=>api().then(next=>{if(active){setData(next);setLoadError("");}}).catch(err=>{if(active)setLoadError(err.message);});const onVisible=()=>{if(document.visibilityState==="visible")load();};load();window.addEventListener("focus",onVisible);document.addEventListener("visibilitychange",onVisible);return()=>{active=false;window.removeEventListener("focus",onVisible);document.removeEventListener("visibilitychange",onVisible);};},[user.id,page]);
  useEffect(()=>{document.title=`${labels[page]??"Início"} — TIMEID`;},[page]);
- useEffect(()=>{document.documentElement.dataset.theme="escuro";return()=>{delete document.documentElement.dataset.theme;};},[]);
+ useEffect(()=>{const theme=data?.preferences?.theme === "claro" ? "claro" : "escuro";document.documentElement.dataset.theme=theme;return()=>{delete document.documentElement.dataset.theme;};},[data?.preferences?.theme]);
  function message(text,isError=false){setNotice({text,isError});}
  function navigate(target){setError("");setNotifications(false);if(target==="cadastro")setEmployee(null);aoNavegar(target);}
  async function mutate(path,method,body){setBusy(true);try{const result=await api(path,{method,body});await refresh();return result;}finally{setBusy(false);}}
