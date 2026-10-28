@@ -693,6 +693,278 @@ button.setting-row:hover { background:var(--soft); }
 :root[data-theme="claro"] .text-button:hover,
 :root[data-theme="claro"] .icon-button:hover { transform: translateY(-1px); }
 
+/* Transição de tema: deixa a troca entre claro e escuro gradual. */
+:root[data-theme] body,
+:root[data-theme] .work-app,
+:root[data-theme] .workspace-main,
+:root[data-theme] .workspace-header,
+:root[data-theme] .workspace-content,
+:root[data-theme] .menu-lateral,
+:root[data-theme] .menu-lateral nav a,
+:root[data-theme] .menu-lateral footer,
+:root[data-theme] .work-card,
+:root[data-theme] .stat,
+:root[data-theme] .department-card,
+:root[data-theme] .report-option,
+:root[data-theme] .work-table th,
+:root[data-theme] .work-table td,
+:root[data-theme] .work-field input,
+:root[data-theme] .work-field select,
+:root[data-theme] .work-field textarea,
+:root[data-theme] .filters input,
+:root[data-theme] .filters select,
+:root[data-theme] .global-search,
+:root[data-theme] .setting-row,
+:root[data-theme] .setting-row select,
+:root[data-theme] .btn.secondary,
+:root[data-theme] .security-tile {
+  transition-property: background, background-color, border-color, color, box-shadow, transform;
+  transition-duration: 1100ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme] body,
+  :root[data-theme] .work-app,
+  :root[data-theme] .workspace-main,
+  :root[data-theme] .workspace-header,
+  :root[data-theme] .workspace-content,
+  :root[data-theme] .menu-lateral,
+  :root[data-theme] .menu-lateral nav a,
+  :root[data-theme] .menu-lateral footer,
+  :root[data-theme] .work-card,
+  :root[data-theme] .stat,
+  :root[data-theme] .department-card,
+  :root[data-theme] .report-option,
+  :root[data-theme] .work-table th,
+  :root[data-theme] .work-table td,
+  :root[data-theme] .work-field input,
+  :root[data-theme] .work-field select,
+  :root[data-theme] .work-field textarea,
+  :root[data-theme] .filters input,
+  :root[data-theme] .filters select,
+  :root[data-theme] .global-search,
+  :root[data-theme] .setting-row,
+  :root[data-theme] .setting-row select,
+  :root[data-theme] .btn.secondary,
+  :root[data-theme] .security-tile {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* Onda de troca de tema: faixas verdes atravessam a tela e revelam as cores novas. */
+.theme-brush {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.theme-brush::before,
+.theme-brush::after {
+  content: "";
+  position: absolute;
+  left: -120%;
+  width: 220%;
+  height: 270px;
+  border-radius: 46% 54% 48% 52% / 62% 44% 56% 38%;
+  opacity: 0;
+  transform: rotate(-4deg);
+  filter: blur(1px);
+}
+
+.theme-brush::before {
+  top: 27%;
+  background: linear-gradient(90deg, rgba(9, 105, 64, 0.15), rgba(43, 238, 145, 0.78) 42%, rgba(19, 151, 87, 0.48) 72%, transparent);
+  box-shadow: 0 0 44px rgba(38, 239, 145, 0.42);
+}
+
+.theme-brush::after {
+  top: 43%;
+  height: 180px;
+  background: linear-gradient(90deg, transparent, rgba(157, 255, 205, 0.52) 38%, rgba(27, 205, 118, 0.68) 66%, rgba(6, 97, 59, 0.2));
+  box-shadow: 0 0 32px rgba(51, 247, 157, 0.32);
+}
+
+.theme-brush-active .theme-brush::before {
+  animation: onda-tema-principal 1250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-brush-active .theme-brush::after {
+  animation: onda-tema-secundaria 1250ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
+}
+
+@keyframes onda-tema-principal {
+  0% { opacity: 0; transform: translateX(-55%) rotate(-4deg) scaleY(0.75); }
+  18% { opacity: 0.9; }
+  72% { opacity: 0.68; }
+  100% { opacity: 0; transform: translateX(108%) rotate(3deg) scaleY(1.2); }
+}
+
+@keyframes onda-tema-secundaria {
+  0% { opacity: 0; transform: translateX(-60%) rotate(3deg) scaleY(0.7); }
+  22% { opacity: 0.72; }
+  78% { opacity: 0.55; }
+  100% { opacity: 0; transform: translateX(108%) rotate(-3deg) scaleY(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-brush-active .theme-brush::before,
+  .theme-brush-active .theme-brush::after { animation-duration: 1ms; }
+}
+
+/* Versão líquida da onda, feita em SVG para curvas mais naturais. */
+.theme-brush::before,
+.theme-brush::after { display: none; }
+
+.theme-brush svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.theme-brush .onda-luz,
+.theme-brush .onda-principal {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.theme-brush-active .onda-luz {
+  animation: onda-liquida-luz 3000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-brush-active .onda-principal {
+  animation: onda-liquida-principal 2900ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+}
+
+@keyframes onda-liquida-luz {
+  0% { opacity: 0; transform: translateX(-62%) scaleY(0.78); }
+  18% { opacity: 0.7; }
+  72% { opacity: 0.54; }
+  100% { opacity: 0; transform: translateX(62%) scaleY(1.1); }
+}
+
+@keyframes onda-liquida-principal {
+  0% { opacity: 0; transform: translateX(-62%) scaleY(0.76); }
+  16% { opacity: 0.94; }
+  70% { opacity: 0.76; }
+  100% { opacity: 0; transform: translateX(62%) scaleY(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-brush-active .onda-luz,
+  .theme-brush-active .onda-principal { animation-duration: 1ms; }
+}
+
+/* Troca de tema por desfoque: brilho verde suave, foco e nova paleta. */
+.theme-blur {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(93, 255, 179, 0.36), transparent 36%),
+    radial-gradient(circle at 12% 92%, rgba(7, 116, 71, 0.34), transparent 42%),
+    radial-gradient(circle at 92% 8%, rgba(40, 230, 140, 0.22), transparent 36%),
+    rgba(6, 64, 41, 0.2);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  animation: desfoque-tema 3000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-blur::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border: 1px solid rgba(176, 255, 215, 0.44);
+  border-radius: 50%;
+  box-shadow: 0 0 85px rgba(48, 246, 151, 0.38);
+  animation: pulso-desfoque 3000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes desfoque-tema {
+  0% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+  28% { opacity: 0.92; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  58% { opacity: 0.54; backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); }
+  100% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+}
+
+@keyframes pulso-desfoque {
+  0% { opacity: 0; transform: scale(0.56); }
+  35% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.55); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-blur,
+  .theme-blur::after { animation-duration: 3000ms; }
+}
+
+/* Troca de tema com a marca TIMEID: foco, brilho e dissolução da logo. */
+.theme-logo-transition {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  background: #010504;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  animation: fundo-marca-tema 3400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-logo-transition span {
+  position: absolute;
+  width: min(22vw, 290px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(140, 255, 199, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 50px rgba(45, 243, 150, 0.52), inset 0 0 35px rgba(45, 243, 150, 0.18);
+  animation: halo-marca-tema 3400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-logo-transition img {
+  position: relative;
+  z-index: 1;
+  width: min(26vw, 330px);
+  max-width: 72vw;
+  filter: drop-shadow(0 0 26px rgba(52, 249, 159, 0.78));
+  animation: marca-tema 3400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fundo-marca-tema {
+  0% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+  20% { opacity: 1; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+  72% { opacity: 1; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+  100% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+}
+
+@keyframes halo-marca-tema {
+  0% { opacity: 0; transform: scale(0.35) rotate(-35deg); }
+  30% { opacity: 0.9; transform: scale(1) rotate(0deg); }
+  60% { opacity: 0.55; transform: scale(1.22) rotate(30deg); }
+  100% { opacity: 0; transform: scale(1.95) rotate(70deg); }
+}
+
+@keyframes marca-tema {
+  0% { opacity: 0; transform: scale(0.72) translateY(22px); filter: blur(14px) drop-shadow(0 0 0 rgba(52, 249, 159, 0)); }
+  28% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0) drop-shadow(0 0 26px rgba(52, 249, 159, 0.78)); }
+  58% { opacity: 1; transform: scale(1.03) translateY(-2px); }
+  82% { opacity: 0; transform: scale(0.98) translateY(-24px); filter: blur(5px) drop-shadow(0 0 42px rgba(52, 249, 159, 0.34)); }
+  100% { opacity: 0; transform: scale(0.96) translateY(-30px); filter: blur(12px) drop-shadow(0 0 0 rgba(52, 249, 159, 0)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-logo-transition,
+  .theme-logo-transition span,
+  .theme-logo-transition img { animation-duration: 3000ms; }
+}
+
 :root[data-theme="claro"] .workspace-header {
   background: rgba(195, 232, 210, 0.94);
   border-color: #97cfaf;
