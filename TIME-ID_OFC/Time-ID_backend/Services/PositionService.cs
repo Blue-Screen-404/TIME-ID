@@ -1,11 +1,15 @@
-public sealed class PositionService
+using TimeId.Operations;
+
+public sealed class PositionService(DataStore store)
 {
-    private readonly InMemoryPositionRepository repository;
+    private static readonly string[] DefaultPositions = { "Analista", "Assistente", "Coordenador", "Gerente" };
 
-    public PositionService(InMemoryPositionRepository repository) => this.repository = repository;
-
-    public List<PositionOption> GetAll() => repository.GetAll()
-        .Select(position => new PositionOption(position.Id, position.Name)).ToList();
+    public List<PositionOption> GetAll() => store.Read(db => DefaultPositions
+        .Concat(db.Employees.Select(employee => employee.Position))
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+        .Select(name => new PositionOption(EmployeeService.PositionId(name), name)).ToList());
 }
 
 public record PositionOption(Guid Id, string Name);

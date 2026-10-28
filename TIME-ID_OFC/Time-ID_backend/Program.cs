@@ -26,9 +26,6 @@ public class Program
         if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
         builder.Services.AddSingleton<DataStore>();
         builder.Services.AddSingleton<AuthenticationService>();
-        builder.Services.AddSingleton<InMemoryEmployeeRepository>();
-        builder.Services.AddSingleton<InMemoryDepartmentRepository>();
-        builder.Services.AddSingleton<InMemoryPositionRepository>();
         builder.Services.AddSingleton<EmployeeService>();
         builder.Services.AddSingleton<DepartmentService>();
         builder.Services.AddSingleton<PositionService>();

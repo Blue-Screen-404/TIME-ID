@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using TimeId.Operations;
 
 [ApiController, Authorize, Route("api/workspace")]
-public class WorkspaceController(DataStore store) : ControllerBase
+public class WorkspaceController(DataStore store, EmployeeService employees, DepartmentService departments) : ControllerBase
 {
     private Guid ActorId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private static Staff StaffById(Database db, Guid id) => db.Employees.FirstOrDefault(e => e.Id == id) ?? throw new DomainError(404, "Funcionário não encontrado.");
@@ -43,107 +43,17 @@ public class WorkspaceController(DataStore store) : ControllerBase
     }));
 
     [HttpPost("employees")]
-    public IActionResult CreateStaff(StaffInput input) => Ok(store.Write(db => SaveStaff(db, input, null)));
+    public IActionResult CreateStaff(StaffInput input) => Ok(employees.Save(ActorId, input, null));
     [HttpPut("employees/{id:guid}")]
-    public IActionResult UpdateStaff(Guid id, StaffInput input) => Ok(store.Write(db => SaveStaff(db, input, id)));
-    private Staff SaveStaff(Database db, StaffInput input, Guid? id)
-    {
-        var actor = DataStore.Actor(db, ActorId); DataStore.Admin(actor);
-        var employee = id is null ? new Staff() : StaffById(db, id.Value);
-        string cpf = new(input.Cpf.Where(char.IsAsciiDigit).ToArray());
-        Require(ValidCpf(cpf), "Informe um CPF válido.");
-        Require(input.Name.Trim().Length >= 2 && input.Position.Trim().Length > 0 && input.Registration.Trim().Length > 0, "Preencha nome, matrícula e cargo.");
-        Require(input.BirthDate > new DateOnly(1900, 1, 1) && input.BirthDate < DataStore.Today, "Confira a data de nascimento.");
-        Require(input.HireDate >= input.BirthDate && input.HireDate <= DataStore.Today.AddYears(1), "Confira a data de admissão.");
-        Require(db.Departments.Any(d => d.Id == input.DepartmentId), "Selecione um departamento cadastrado.");
-        Require(!db.Employees.Any(e => e.Id != employee.Id && (e.Cpf == cpf || e.Registration.Equals(input.Registration.Trim(), StringComparison.OrdinalIgnoreCase) || e.Email.Equals(input.Email.Trim(), StringComparison.OrdinalIgnoreCase))), "CPF, matrícula ou e-mail já cadastrado.");
-        var linked = db.Accounts.FirstOrDefault(a => a.EmployeeId == employee.Id);
-        // As contas de demonstração podem ser vinculadas pelo mesmo e-mail ao primeiro cadastro.
-        var matching = db.Accounts.FirstOrDefault(a => a.Email.Equals(input.Email.Trim(), StringComparison.OrdinalIgnoreCase));
-        Require(matching is null || matching == linked || matching.EmployeeId is null && linked is null, "E-mail já usado por outra conta.");
-        if (linked is null && matching is not null) linked = matching;
-        if (linked is not null && linked.Id == actor.Id) Require(input.Active, "Você não pode desativar sua própria conta.");
-        if (linked is null && input.CreateAccess)
-        {
-            Require(!string.IsNullOrWhiteSpace(input.InitialPassword) && input.InitialPassword.Length >= 8, "Informe uma senha inicial com pelo menos 8 caracteres.");
-            linked = new Account { Role = input.AccessRole };
-            linked.PasswordHash = new PasswordHasher<Account>().HashPassword(linked, input.InitialPassword!);
-            db.Accounts.Add(linked);
-        }
-        Require(input.AccessRole is "Administrador" or "Gestor" or "Usuário", "Perfil de acesso inválido.");
-        foreach (var team in db.Departments.Where(d => d.LeaderId == employee.Id && (d.Id != input.DepartmentId || !input.Active))) team.LeaderId = null;
-        employee.Name = input.Name.Trim(); employee.Cpf = cpf; employee.Registration = input.Registration.Trim();
-        employee.Email = input.Email.Trim(); employee.Phone = (input.Phone ?? "").Trim(); employee.BirthDate = input.BirthDate;
-        employee.HireDate = input.HireDate; employee.DepartmentId = input.DepartmentId; employee.Position = input.Position.Trim();
-        Require(input.WorkMode is "Presencial" or "Híbrido" or "Remoto", "Selecione um regime de trabalho válido.");
-        employee.WorkMode = input.WorkMode;
-        var validWorkDays = new[] { "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo" };
-        var requestedWorkDays = input.WorkDays ?? new List<string>();
-        Require(requestedWorkDays.Distinct().Count() == requestedWorkDays.Count && requestedWorkDays.All(validWorkDays.Contains), "Selecione dias presenciais válidos.");
-        Require(input.WorkMode != "Híbrido" || requestedWorkDays.Count > 0, "Selecione pelo menos um dia presencial para o regime híbrido.");
-        employee.WorkDays = input.WorkMode == "Híbrido" ? requestedWorkDays.ToList() : new List<string>();
-        if (!input.Active || input.WorkMode == "Remoto") db.FaceProfiles.RemoveAll(profile => profile.EmployeeId == employee.Id);
-        var postalCode = new string((input.PostalCode ?? "").Where(char.IsDigit).ToArray());
-        Require(postalCode.Length == 0 || (postalCode.Length == 8 && System.Text.RegularExpressions.Regex.IsMatch(input.PostalCode!, @"^\d{5}-?\d{3}$")), "Informe um CEP com 8 dígitos.");
-        var state = (input.State ?? "").Trim().ToUpperInvariant();
-        Require(state.Length == 0 || "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".Split(' ').Contains(state), "Selecione uma UF válida.");
-        employee.PostalCode = postalCode; employee.Street = (input.Street ?? "").Trim();
-        employee.Number = (input.Number ?? "").Trim(); employee.Complement = (input.Complement ?? "").Trim();
-        employee.Neighborhood = (input.Neighborhood ?? "").Trim(); employee.City = (input.City ?? "").Trim();
-        employee.State = state; employee.Duties = (input.Duties ?? "").Trim();
-        employee.WeeklyHours = input.WeeklyHours; employee.Address = (input.Address ?? "").Trim(); employee.Rg = (input.Rg ?? "").Trim(); employee.Active = input.Active;
-        if (id is null) db.Employees.Add(employee);
-        if (linked is not null) { linked.EmployeeId = employee.Id; linked.Username = employee.Name; linked.Email = employee.Email; linked.Active = employee.Active; }
-        DataStore.Log(db, actor, id is null ? "Criou" : "Editou", "Funcionário", employee.Name);
-        return employee;
-    }
-    private static bool ValidCpf(string cpf)
-    {
-        if (cpf.Length != 11 || cpf.Distinct().Count() == 1) return false;
-        for (int length = 9; length <= 10; length++)
-        {
-            int sum = 0;
-            for (int i = 0; i < length; i++) sum += (cpf[i] - '0') * (length + 1 - i);
-            int digit = sum * 10 % 11; if (digit == 10) digit = 0;
-            if (digit != cpf[length] - '0') return false;
-        }
-        return true;
-    }
+    public IActionResult UpdateStaff(Guid id, StaffInput input) => Ok(employees.Save(ActorId, input, id));
     [HttpDelete("employees/{id:guid}")]
-    public IActionResult DeleteStaff(Guid id) => Ok(store.Write(db =>
-    {
-        var actor = DataStore.Actor(db, ActorId); DataStore.Admin(actor); var employee = StaffById(db, id);
-        Require(!db.Punches.Any(p => p.EmployeeId == id) && !db.Vacations.Any(v => v.EmployeeId == id), "Há histórico de ponto ou férias. Inative o funcionário para preservar os registros.");
-        Require(!db.Accounts.Any(a => a.Id == actor.Id && a.EmployeeId == id), "Você não pode excluir sua própria conta.");
-        foreach (var team in db.Departments.Where(d => d.LeaderId == id)) team.LeaderId = null;
-        db.FaceProfiles.RemoveAll(profile => profile.EmployeeId == id);
-        foreach (var account in db.Accounts.Where(a => a.EmployeeId == id)) { account.Active = false; account.EmployeeId = null; }
-        db.Employees.Remove(employee); DataStore.Log(db, actor, "Excluiu", "Funcionário", employee.Name); return new { deleted = true };
-    }));
-
+    public IActionResult DeleteStaff(Guid id) { employees.Delete(ActorId, id); return Ok(new { deleted = true }); }
     [HttpPost("departments")]
-    public IActionResult CreateTeam(Team input) => Ok(store.Write(db => SaveTeam(db, input, null)));
+    public IActionResult CreateTeam(Team input) => Ok(departments.Save(ActorId, input, null));
     [HttpPut("departments/{id:guid}")]
-    public IActionResult UpdateTeam(Guid id, Team input) => Ok(store.Write(db => SaveTeam(db, input, id)));
-    private Team SaveTeam(Database db, Team input, Guid? id)
-    {
-        var actor = DataStore.Actor(db, ActorId); DataStore.Admin(actor);
-        var team = id is null ? new Team() : db.Departments.FirstOrDefault(d => d.Id == id) ?? throw new DomainError(404, "Departamento não encontrado.");
-        Require(input.Name.Trim().Length >= 2, "Informe o nome do departamento.");
-        Require(!db.Departments.Any(d => d.Id != team.Id && d.Name.Equals(input.Name.Trim(), StringComparison.OrdinalIgnoreCase)), "Departamento já cadastrado.");
-        if (input.LeaderId is not null) Require(db.Employees.Any(e => e.Id == input.LeaderId && e.Active && e.DepartmentId == team.Id), "O líder deve ser um funcionário ativo deste departamento.");
-        team.Name = input.Name.Trim(); team.Description = (input.Description ?? "").Trim(); team.LeaderId = input.LeaderId;
-        if (id is null) db.Departments.Add(team);
-        DataStore.Log(db, actor, id is null ? "Criou" : "Editou", "Departamento", team.Name); return team;
-    }
+    public IActionResult UpdateTeam(Guid id, Team input) => Ok(departments.Save(ActorId, input, id));
     [HttpDelete("departments/{id:guid}")]
-    public IActionResult DeleteTeam(Guid id) => Ok(store.Write(db =>
-    {
-        var actor = DataStore.Actor(db, ActorId); DataStore.Admin(actor);
-        var team = db.Departments.FirstOrDefault(d => d.Id == id) ?? throw new DomainError(404, "Departamento não encontrado.");
-        Require(!db.Employees.Any(e => e.DepartmentId == id), "Transfira os funcionários antes de excluir o departamento.");
-        db.Departments.Remove(team); DataStore.Log(db, actor, "Excluiu", "Departamento", team.Name); return new { deleted = true };
-    }));
+    public IActionResult DeleteTeam(Guid id) { departments.Delete(ActorId, id); return Ok(new { deleted = true }); }
     private static readonly string[] Kinds = { "Entrada", "Início do intervalo", "Retorno do intervalo", "Saída" };
     [HttpPost("punches")]
     public IActionResult RegisterPunch(PunchInput input) => Ok(store.Write(db =>
