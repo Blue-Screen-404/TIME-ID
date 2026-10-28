@@ -152,51 +152,9 @@ Esta persistência local foi feita para uma única instância do servidor. Não 
 - Há dois perfis de acesso. A indicação de líder de departamento não cria um terceiro perfil de permissões.
 - A estrutura atual usa arquivo JSON local, sem banco SQL ou sincronização entre servidores.
 
-## Desenvolvimento
+## Arquitetura e desenvolvimento
 
-```text
-TIME-ID/
-├── README.md
-├── global.json
-├── scripts/                         # testes de integração em PowerShell
-└── TIME-ID_OFC/
-    ├── Time-ID_backend/
-    │   ├── Controllers/             # autenticação e operações da API
-    │   ├── Operations/              # modelos, persistência e duas etapas
-    │   ├── Services/                # autenticação e perfil
-    │   ├── App_Data/                # dados locais gerados ao executar
-    │   ├── wwwroot/                 # React preparado para o navegador
-    │   └── Program.cs
-    └── Time-ID_frontend/
-        ├── src/workspace/           # telas funcionais do sistema
-        ├── src/components/          # componentes compartilhados
-        ├── src/services/            # comunicação com a API C#
-        └── package.json
-```
-
-### Atualizar a interface após alterar o código React
-
-Esta etapa é apenas para quem desenvolve as telas. O frontend usa React, CSS e Lucide React para ícones. Vite e Node.js/npm são ferramentas de preparação, não um segundo servidor necessário para executar o sistema integrado.
-
-Com Node.js 22.12 ou superior instalado, execute na pasta principal:
-
-```powershell
-npm.cmd ci --prefix ./TIME-ID_OFC/Time-ID_frontend
-npm.cmd run build --prefix ./TIME-ID_OFC/Time-ID_frontend
-```
-
-O primeiro comando instala as dependências; o segundo atualiza `wwwroot`. Ao compartilhar alterações de interface, inclua os arquivos preparados de `wwwroot`. Depois, execute o comando `dotnet run` descrito acima. Para alterações apenas em C#, basta parar e iniciar o servidor novamente.
-
-### Testes de integração
-
-Na pasta principal, execute em PowerShell:
-
-```powershell
-./scripts/Test-Login.ps1
-./scripts/Test-Crud.ps1
-```
-
-Os scripts compilam o C#, iniciam servidores temporários nas portas 5099 e 5101 e usam arquivos de dados isolados em `artifacts`. Verificam login, sessões, perfil, CRUD, permissões, validações, relatórios, persistência após reinício, senha e autenticação em duas etapas. Não alteram o arquivo de dados usado na execução normal.
+A arquitetura, a estrutura atual dos diretórios e os procedimentos de build e testes estão documentados em [Arch.md](Arch.md).
 
 ## Próximas etapas
 
