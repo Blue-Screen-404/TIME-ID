@@ -26,6 +26,10 @@ public class Program
         if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
         builder.Services.AddSingleton<DataStore>();
         builder.Services.AddSingleton<AuthenticationService>();
+        builder.Services.AddSingleton<EmployeeService>();
+        builder.Services.AddSingleton<DepartmentService>();
+        builder.Services.AddSingleton<PositionService>();
+        builder.Services.AddSingleton<DashboardService>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {

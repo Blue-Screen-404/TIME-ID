@@ -74,6 +74,7 @@ public class Staff
     public DateOnly BirthDate { get; set; }
     public DateOnly HireDate { get; set; }
     public Guid DepartmentId { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public Guid? LeaderId { get; set; }
     public string Position { get; set; } = "";
     public string WorkMode { get; set; } = "Presencial";
     public List<string> WorkDays { get; set; } = new();
