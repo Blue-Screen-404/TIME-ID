@@ -12,6 +12,7 @@ import Settings from "./Settings";
 import { FacialAdmin } from "./Facial";
 import { Field, Modal } from "./Ui";
 import { api } from "../services/workspace";
+import HelpChat from "./HelpChat";
 import logoTimeId from "../assets/logo-timeid-esmeralda.png";
 import "../pages/Inicio.css";
 import "./Workspace.css";
@@ -87,6 +88,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {!labels[page]&&<p>Página não encontrada.</p>}
  </>}
  </div></section>
+ <HelpChat/>
  {editor&&<Modal title={editor.deleting?"Confirmar exclusão":({departments:editor.id?"Editar departamento":"Novo departamento",vacations:editor.id?"Editar férias":"Solicitar férias",holidays:editor.id?"Editar feriado":"Novo feriado",punches:"Corrigir marcação",settings:"Dados da empresa",password:"Alterar senha"})[editor.type]} busy={busy} error={error} onCancel={()=>setEditor(null)} onSubmit={saveEditor} submitLabel={editor.deleting?"Excluir":"Salvar"}>
  {editor.deleting?<><p>Deseja excluir <strong>{editor.name}</strong>?</p><p className="muted-text">Esta ação remove o registro. Funcionários com histórico devem ser inativados.</p>{editor.type==="punches"&&field("Justificativa *","reason",{required:true,minLength:5,maxLength:500})}</>:<>
  {editor.type==="departments"&&<><Field label="Exemplos de departamentos"><select value="" onChange={e=>{const name=e.target.value;if(name)setEditor(current=>({...current,draft:{...current.draft,name,description:departmentExamples[name]}}));}}><option value="">Escolha um exemplo (opcional)</option>{Object.keys(departmentExamples).map(name=><option key={name} value={name}>{name}</option>)}</select></Field><p className="muted-text">Escolha um exemplo para preencher nome e descrição, ou escreva seus próprios dados abaixo. O departamento será gravado ao salvar.</p>{field("Nome *","name",{required:true,minLength:2,maxLength:100})}{field("Descrição","description",{maxLength:400})}<Field label="Líder"><select value={editor.draft.leaderId??""} onChange={e=>change("leaderId",e.target.value)}><option value="">Não definido</option>{data.employees.filter(e=>e.active&&e.departmentId===editor.id).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select></Field></>}

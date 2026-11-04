@@ -156,6 +156,18 @@ Esta persistência local foi feita para uma única instância do servidor. Não 
 
 A arquitetura, a estrutura atual dos diretórios e os procedimentos de build e testes estão documentados em [Arch.md](Arch.md).
 
+### Assistente de dúvidas do TIME-ID
+
+O botão **Ajuda TIME-ID**, no canto inferior direito da área autenticada, abre o chatbot. O backend envia a pergunta, o histórico recente e a documentação do projeto (`Funcionalidades.md`, `Arch.md`, este README e `Roadmap.md`) ao Gemini. A IA responde de forma conversacional e objetiva, sem busca RAG local nem exposição de referências técnicas ao usuário. O conteúdo do roadmap é tratado como planejado, não como implementado. Perguntas fora do escopo ou sem resposta na documentação recebem uma resposta curta explicando que o assistente só conhece o TIME-ID.
+
+Para habilitar as respostas, configure uma chave da Gemini API como segredo local (não a coloque no código nem em `appsettings.json`):
+
+```powershell
+dotnet user-secrets set --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj "Gemini:ApiKey" "SUA_CHAVE_DA_GEMINI_API"
+```
+
+Reinicie o servidor depois de configurar. O modelo padrão é `gemini-3.5-flash-lite`, escolhido por responder rapidamente a dúvidas curtas. Se ele ou o modelo definido em `Gemini__Model` estiver ocupado, o backend tenta automaticamente outro modelo compatível. Também é possível fornecer a chave pela variável de ambiente `GEMINI_API_KEY`. A chave permanece no backend e não deve ser incluída no código, no frontend ou no Git. Sem uma chave, o chat avisa que a integração precisa ser configurada; ele não recorre a respostas RAG locais. A documentação é carregada do repositório durante o desenvolvimento e copiada para a publicação junto com o backend.
+
 ## Próximas etapas
 
 - Banco de dados para implantação com múltiplas instâncias.

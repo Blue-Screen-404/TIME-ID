@@ -10,8 +10,8 @@ Navegador
   └── chamadas HTTP /api/* com cookie de sessão
           ↓
 ASP.NET Core 8
-  ├── Controllers: autenticação, área de trabalho e recursos faciais
-  ├── Services: autenticação, perfil e serviços auxiliares
+  ├── Controllers: autenticação, área de trabalho, recursos faciais e ajuda
+  ├── Services: autenticação, perfil, ajuda/RAG e serviços auxiliares
   ├── Dominios e DTOs: entidades e contratos da API
   └── Operations/DataStore: validação, estado e persistência JSON
           ↓
@@ -58,6 +58,8 @@ O frontend é escrito em React, JavaScript e CSS. O Vite gera o pacote estático
 As chamadas usam a mesma origem e enviam o cookie de sessão do navegador. O backend também serve `index.html` nas rotas da interface, como `/inicio`, `/ponto` e `/relatorios`; essas rotas protegidas exigem autenticação. Rotas de API desconhecidas não são redirecionadas para a interface e continuam respondendo como API.
 
 O reconhecimento facial é executado no navegador com os modelos distribuídos em `wwwroot/models`. O servidor oferece endpoints para os recursos faciais e controla o acesso conforme o perfil. As telas e o fluxo de câmera estão em `src/workspace/Facial.jsx` e `Facial.css`.
+
+O assistente de dúvidas fica em `src/workspace/HelpChat.jsx` e chama `POST /api/help-chat`. O endpoint exige sessão autenticada. `Services/HelpChatService.cs` envia a pergunta atual, o histórico recente e os documentos `Funcionalidades.md`, `Arch.md`, `README.md` e `Roadmap.md` ao Gemini pela API Interactions. Não há recuperação RAG local. O modelo padrão é Gemini 3.5 Flash-Lite; em caso de limite ou indisponibilidade, o serviço tenta modelos alternativos compatíveis. A chave é lida de `Gemini:ApiKey` (User Secrets) ou `GEMINI_API_KEY` no servidor, nunca pelo navegador. Sem chave, o chat avisa que falta configurar a integração. Os documentos são carregados do repositório durante o desenvolvimento e copiados para a saída e publicação do backend.
 
 ## Backend e responsabilidades
 
