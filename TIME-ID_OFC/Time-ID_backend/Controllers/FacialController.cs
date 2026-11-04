@@ -5,10 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using TimeId.Operations;
 
 [ApiController, Route("api/facial")]
-public sealed class FacialController(DataStore store, IDataProtectionProvider protection) : ControllerBase
+public sealed class FacialController(DataStore store, IDataProtectionProvider protection, IWebHostEnvironment environment) : ControllerBase
 {
     private static readonly string[] Kinds = { "Entrada", "Início do intervalo", "Retorno do intervalo", "Saída" };
     private readonly IDataProtector protector = protection.CreateProtector("TIMEID.FaceDescriptor.v1");
+    private readonly IDataProtector cameraProtector = protection.CreateProtector("TIMEID.CameraConnection.v1");
+    private readonly IDataProtector alertPhotoProtector = protection.CreateProtector("TIMEID.CameraAlertPhoto.v1");
+    private string AlertPhotoPath(Guid id) => Path.Combine(environment.ContentRootPath, "App_Data", "CameraAlerts", $"{id:N}.bin");
     private Guid ActorId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private static void Require(bool ok, string message) { if (!ok) throw new DomainError(400, message); }
     private static int Age(DateOnly birth, DateOnly today) => today.Year - birth.Year - (today.Month < birth.Month || today.Month == birth.Month && today.Day < birth.Day ? 1 : 0);
@@ -67,6 +70,151 @@ public sealed class FacialController(DataStore store, IDataProtectionProvider pr
         return new { removed = true };
     }));
 
+    [Authorize, HttpGet("cameras")]
+    public IActionResult Cameras() => Ok(store.Read(db =>
+    {
+        DataStore.Admin(DataStore.Actor(db, ActorId));
+        return new
+        {
+            sources = db.CameraSources.OrderBy(source => source.Name)
+                .Select(source => new { source.Id, source.Name, source.Protocol, source.CreatedAt, streamAvailable = false }).ToList(),
+            alerts = db.CameraAlerts.OrderByDescending(alert => alert.At).Take(50).ToList()
+        };
+    }));
+
+    [Authorize, HttpPost("cameras")]
+    public IActionResult AddCamera(CameraSourceInput input)
+    {
+        var admin = store.Read(db => DataStore.Actor(db, ActorId));
+        DataStore.Admin(admin);
+        if (!Uri.TryCreate(input.Endpoint, UriKind.Absolute, out var endpoint) ||
+            input.Protocol == "RTSP" && endpoint.Scheme is not ("rtsp" or "rtsps") ||
+            input.Protocol == "ONVIF" && endpoint.Scheme is not ("http" or "https"))
+            throw new DomainError(400, "Informe um endereço RTSP válido ou o endereço HTTP/HTTPS do serviço ONVIF.");
+
+        var connection = System.Text.Json.JsonSerializer.Serialize(new { input.Endpoint, input.Username, input.Password });
+        var source = new CameraSource
+        {
+            Name = input.Name.Trim(),
+            Protocol = input.Protocol,
+            ProtectedConnection = cameraProtector.Protect(connection)
+        };
+        return Ok(store.Write(db =>
+        {
+            DataStore.Admin(DataStore.Actor(db, ActorId));
+            db.CameraSources.Add(source);
+            DataStore.Log(db, DataStore.Actor(db, ActorId), "Cadastrou câmera", "Monitoramento de câmeras", $"{source.Name} ({source.Protocol}); reprodução pendente de integração.");
+            return new { source.Id, source.Name, source.Protocol, source.CreatedAt, streamAvailable = false };
+        }));
+    }
+
+    [Authorize, HttpDelete("cameras/{cameraId:guid}")]
+    public IActionResult RemoveCamera(Guid cameraId) => Ok(store.Write(db =>
+    {
+        var admin = DataStore.Actor(db, ActorId);
+        DataStore.Admin(admin);
+        var source = db.CameraSources.FirstOrDefault(item => item.Id == cameraId)
+            ?? throw new DomainError(404, "Câmera não encontrada.");
+        db.CameraSources.Remove(source);
+        DataStore.Log(db, admin, "Removeu câmera", "Monitoramento de câmeras", source.Name);
+        return new { removed = true };
+    }));
+
+    [Authorize, HttpPost("monitor/match")]
+    public IActionResult MonitorMatch(FaceMatchInput input)
+    {
+        DataStore.Admin(store.Read(db => DataStore.Actor(db, ActorId)));
+        if (!ValidDescriptor(input.Descriptor)) return BadRequest(new { title = "Não foi possível analisar o rosto capturado." });
+
+        var match = store.Read(db => MatchEmployee(db, input.Descriptor));
+        if (match is { } found) return Ok(new { matched = true, employee = found.Name, at = DateTimeOffset.UtcNow, alertCreated = false });
+
+        const string cameraId = "webcam-local";
+        var now = DateTimeOffset.UtcNow;
+        var recentAlertExists = store.Read(db => db.CameraAlerts.Any(alert => alert.CameraId == cameraId && now - alert.At < TimeSpan.FromMinutes(1)));
+        if (recentAlertExists)
+        {
+            var recent = store.Read(db => db.CameraAlerts.Where(alert => alert.CameraId == cameraId && now - alert.At < TimeSpan.FromMinutes(1)).OrderByDescending(alert => alert.At).FirstOrDefault());
+            return Ok(new { matched = false, employee = (string?)null, at = now, alertCreated = false, alertId = recent?.Id, hasPhoto = recent?.HasPhoto ?? false });
+        }
+
+        var alert = store.Write(db =>
+        {
+            var admin = DataStore.Actor(db, ActorId);
+            DataStore.Admin(admin);
+            if (db.CameraAlerts.Any(item => item.CameraId == cameraId && now - item.At < TimeSpan.FromMinutes(1))) return null;
+            var expiredIds = db.CameraAlerts.Where(item => item.At < now.AddDays(-30)).Select(item => item.Id).ToArray();
+            db.CameraAlerts.RemoveAll(item => expiredIds.Contains(item.Id));
+            foreach (var expiredId in expiredIds) DeleteAlertPhoto(expiredId);
+            var created = new CameraAlert(Guid.NewGuid(), cameraId, "Webcam local", now, "Pessoa não cadastrada");
+            db.CameraAlerts.Add(created);
+            if (db.CameraAlerts.Count > 500)
+            {
+                var removeCount = db.CameraAlerts.Count - 500;
+                var oldestIds = db.CameraAlerts.OrderBy(item => item.At).Take(removeCount).Select(item => item.Id).ToHashSet();
+                db.CameraAlerts.RemoveAll(item => oldestIds.Contains(item.Id));
+                foreach (var oldId in oldestIds) DeleteAlertPhoto(oldId);
+            }
+            DataStore.Log(db, admin, "Alerta de pessoa sem correspondência facial", "Monitoramento de câmeras", "Webcam local; fotografia do alerta protegida no armazenamento local.");
+            return created;
+        });
+        return Ok(new { matched = false, employee = (string?)null, at = now, alertCreated = alert is not null, alertId = alert?.Id, hasPhoto = alert?.HasPhoto ?? false });
+    }
+
+    [Authorize, HttpPost("alerts/{alertId:guid}/photo")]
+    public IActionResult SaveAlertPhoto(Guid alertId, CameraAlertPhotoInput input)
+    {
+        DataStore.Admin(store.Read(db => DataStore.Actor(db, ActorId)));
+        const string prefix = "data:image/jpeg;base64,";
+        if (!input.ImageData.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return BadRequest(new { title = "A foto do alerta precisa estar no formato JPEG." });
+        byte[] image;
+        try { image = Convert.FromBase64String(input.ImageData[prefix.Length..]); }
+        catch (FormatException) { return BadRequest(new { title = "A foto recebida está inválida." }); }
+        if (image.Length is < 4 or > 1_000_000 || image[0] != 0xff || image[1] != 0xd8 || image[^2] != 0xff || image[^1] != 0xd9)
+            return BadRequest(new { title = "A foto do alerta está inválida ou excede o limite de tamanho." });
+
+        var alert = store.Read(db => db.CameraAlerts.FirstOrDefault(item => item.Id == alertId));
+        if (alert is null || alert.CameraId != "webcam-local") return NotFound(new { title = "Alerta não encontrado." });
+        if (alert.HasPhoto) return Ok(new { saved = true, hasPhoto = true });
+        var path = AlertPhotoPath(alertId);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        System.IO.File.WriteAllBytes(path, alertPhotoProtector.Protect(image));
+        try
+        {
+            store.Write(db =>
+            {
+                DataStore.Admin(DataStore.Actor(db, ActorId));
+                var current = db.CameraAlerts.FirstOrDefault(item => item.Id == alertId) ?? throw new DomainError(404, "Alerta não encontrado.");
+                db.CameraAlerts[db.CameraAlerts.IndexOf(current)] = current with { HasPhoto = true };
+                return true;
+            });
+        }
+        catch { System.IO.File.Delete(path); throw; }
+        return Ok(new { saved = true, hasPhoto = true });
+    }
+
+    [Authorize, HttpGet("alerts/{alertId:guid}/photo")]
+    public IActionResult AlertPhoto(Guid alertId)
+    {
+        DataStore.Admin(store.Read(db => DataStore.Actor(db, ActorId)));
+        var alert = store.Read(db => db.CameraAlerts.FirstOrDefault(item => item.Id == alertId && item.HasPhoto));
+        if (alert is null) return NotFound();
+        try
+        {
+            var bytes = alertPhotoProtector.Unprotect(System.IO.File.ReadAllBytes(AlertPhotoPath(alertId)));
+            Response.Headers.CacheControl = "no-store";
+            return File(bytes, "image/jpeg");
+        }
+        catch (IOException) { return NotFound(); }
+        catch (System.Security.Cryptography.CryptographicException) { return NotFound(); }
+    }
+
+    private void DeleteAlertPhoto(Guid id)
+    {
+        var path = AlertPhotoPath(id);
+        if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+    }
+
     // O terminal captura e compara no próprio computador. A rota de batida só aceita
     // conexões locais; imagens e vetores faciais não são enviados ao servidor.
     [AllowAnonymous, HttpPost("terminal/punch")]
@@ -109,5 +257,25 @@ public sealed class FacialController(DataStore store, IDataProtectionProvider pr
         double sum = 0;
         for (int i = 0; i < left.Length; i++) { var delta = left[i] - right[i]; sum += delta * delta; }
         return Math.Sqrt(sum);
+    }
+
+    private (string Name, double Distance)? MatchEmployee(Database db, float[] descriptor)
+    {
+        var candidates = new List<(string Name, double Distance)>();
+        foreach (var profile in db.FaceProfiles)
+        {
+            var employee = db.Employees.FirstOrDefault(item => item.Id == profile.EmployeeId && item.Active && item.WorkMode != "Remoto");
+            if (employee is null) continue;
+            try
+            {
+                var saved = System.Text.Json.JsonSerializer.Deserialize<float[]>(protector.Unprotect(profile.ProtectedDescriptor));
+                if (saved is { Length: 128 }) candidates.Add((employee.Name, Distance(descriptor, saved)));
+            }
+            catch (System.Security.Cryptography.CryptographicException) { /* Perfil protegido por outra chave: ignorar. */ }
+        }
+        var ranked = candidates.OrderBy(item => item.Distance).Take(2).ToArray();
+        if (ranked.Length == 0 || ranked[0].Distance > 0.48 || ranked.Length > 1 && ranked[1].Distance - ranked[0].Distance < 0.08)
+            return null;
+        return ranked[0];
     }
 }

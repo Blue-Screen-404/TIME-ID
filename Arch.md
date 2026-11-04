@@ -10,8 +10,8 @@ Navegador
   └── chamadas HTTP /api/* com cookie de sessão
           ↓
 ASP.NET Core 8
-  ├── Controllers: autenticação, área de trabalho e recursos faciais
-  ├── Services: autenticação, perfil e serviços auxiliares
+  ├── Controllers: autenticação, área de trabalho, recursos faciais e ajuda
+  ├── Services: autenticação, perfil, ajuda/RAG e serviços auxiliares
   ├── Dominios e DTOs: entidades e contratos da API
   └── Operations/DataStore: validação, estado e persistência JSON
           ↓
@@ -58,6 +58,10 @@ O frontend é escrito em React, JavaScript e CSS. O Vite gera o pacote estático
 As chamadas usam a mesma origem e enviam o cookie de sessão do navegador. O backend também serve `index.html` nas rotas da interface, como `/inicio`, `/ponto` e `/relatorios`; essas rotas protegidas exigem autenticação. Rotas de API desconhecidas não são redirecionadas para a interface e continuam respondendo como API.
 
 O reconhecimento facial é executado no navegador com os modelos distribuídos em `wwwroot/models`. O servidor oferece endpoints para os recursos faciais e controla o acesso conforme o perfil. As telas e o fluxo de câmera estão em `src/workspace/Facial.jsx` e `Facial.css`.
+
+O monitoramento temporário da webcam fica na página `src/workspace/CameraMonitor.jsx`, exclusiva de Administrador, e compara descritores no endpoint protegido `POST /api/facial/monitor/match`. Quando não há correspondência, a tela envia uma foto JPEG reduzida ao endpoint de alerta; o backend a protege com Data Protection em `App_Data/CameraAlerts`, e somente o Administrador pode consultá-la. Alertas e fotos são retidos por até 30 dias, com limite de 500 alertas. Os cadastros RTSP/ONVIF são armazenados com conexão protegida por Data Protection e ainda não são reproduzidos. O conector para transmissão de câmeras reais depende do protocolo e modelo do equipamento.
+
+O assistente de dúvidas fica em `src/workspace/HelpChat.jsx` e chama `POST /api/help-chat`. O endpoint exige sessão autenticada. `Services/HelpChatService.cs` envia a pergunta atual, o histórico recente e os documentos `Funcionalidades.md`, `Arch.md`, `README.md` e `Roadmap.md` ao Gemini pela API Interactions. Não há recuperação RAG local. O modelo padrão é Gemini 3.5 Flash-Lite; em caso de limite ou indisponibilidade, o serviço tenta modelos alternativos compatíveis. A chave é lida de `Gemini:ApiKey` (User Secrets) ou `GEMINI_API_KEY` no servidor, nunca pelo navegador. Sem chave, o chat avisa que falta configurar a integração. Os documentos são carregados do repositório durante o desenvolvimento e copiados para a saída e publicação do backend.
 
 ## Backend e responsabilidades
 

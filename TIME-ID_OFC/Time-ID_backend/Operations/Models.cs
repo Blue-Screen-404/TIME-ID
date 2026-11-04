@@ -11,6 +11,8 @@ public class Database
     public List<Team> Departments { get; set; } = new();
     public List<Punch> Punches { get; set; } = new();
     public List<FaceProfile> FaceProfiles { get; set; } = new();
+    public List<CameraSource> CameraSources { get; set; } = new();
+    public List<CameraAlert> CameraAlerts { get; set; } = new();
     public List<Leave> Vacations { get; set; } = new();
     public List<DayOff> Holidays { get; set; } = new();
     public List<Change> Audit { get; set; } = new();
@@ -128,6 +130,27 @@ public class FaceEnrollmentInput
 public class FaceMatchInput
 {
     [Required] public float[] Descriptor { get; set; } = Array.Empty<float>();
+}
+public class CameraSource
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = "";
+    public string Protocol { get; set; } = "RTSP";
+    public string ProtectedConnection { get; set; } = "";
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+public class CameraSourceInput
+{
+    [Required, StringLength(80, MinimumLength = 2)] public string Name { get; set; } = "";
+    [Required, RegularExpression("^(RTSP|ONVIF)$")] public string Protocol { get; set; } = "RTSP";
+    [Required, StringLength(500)] public string Endpoint { get; set; } = "";
+    [StringLength(100)] public string Username { get; set; } = "";
+    [StringLength(200)] public string Password { get; set; } = "";
+}
+public record CameraAlert(Guid Id, string CameraId, string CameraName, DateTimeOffset At, string Status, bool HasPhoto = false);
+public class CameraAlertPhotoInput
+{
+    [Required, StringLength(1_500_000)] public string ImageData { get; set; } = "";
 }
 public class PunchInput { public Guid EmployeeId { get; set; } }
 public class PunchCorrection

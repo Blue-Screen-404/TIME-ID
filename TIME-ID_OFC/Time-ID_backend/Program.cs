@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using TimeId.Services;
 
 public class Program
 {
@@ -14,6 +15,8 @@ public class Program
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
         builder.Services.AddControllers();
+        builder.Services.AddHttpClient();
+        builder.Services.AddSingleton<HelpChatService>();
         // A conexão é configurada para uso futuro; SQLite só cria o arquivo quando
         // alguma operação abre a conexão ou executa uma migração explicitamente.
         string sqliteConnection = builder.Configuration.GetConnectionString("TimeId")
@@ -100,7 +103,7 @@ public class Program
                 ? Results.Redirect("/inicio")
                 : Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
         app.MapGet("/terminal", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
-        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
+        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/cameras", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
         {
             app.MapGet(path, () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
                 .RequireAuthorization();

@@ -1,9 +1,9 @@
-import { House, Clock3, Users, Plus, List, Building2, BarChart3, Umbrella, CalendarDays, Settings, LogOut, ScanFace } from "lucide-react";
+import { House, Clock3, Users, Plus, List, Building2, BarChart3, Umbrella, CalendarDays, Settings, LogOut, ScanFace, Video } from "lucide-react";
 import logoTimeId from "../assets/logo-timeid-esmeralda.png";
 const items = [
   ["Início", House, "inicio"], ["Ponto", Clock3, "ponto"],
   ["Funcionários", Users, "funcionarios"], ["Cadastrar", Plus, "cadastro"],
-  ["Listar", List, "listar"], ["Departamentos", Building2, "departamentos"],
+  ["Listar", List, "listar"], ["Departamentos", Building2, "departamentos"], ["Câmeras", Video, "cameras"],
   ["Reconhecimento facial", ScanFace, "facial"], ["Relatórios", BarChart3, "relatorios"], ["Férias", Umbrella, "ferias"],
   ["Feriados", CalendarDays, "feriados"], ["Configurações", Settings, "configuracoes"],
 ];
