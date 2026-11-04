@@ -147,7 +147,11 @@ public class CameraSourceInput
     [StringLength(100)] public string Username { get; set; } = "";
     [StringLength(200)] public string Password { get; set; } = "";
 }
-public record CameraAlert(Guid Id, string CameraId, string CameraName, DateTimeOffset At, string Status);
+public record CameraAlert(Guid Id, string CameraId, string CameraName, DateTimeOffset At, string Status, bool HasPhoto = false);
+public class CameraAlertPhotoInput
+{
+    [Required, StringLength(1_500_000)] public string ImageData { get; set; } = "";
+}
 public class PunchInput { public Guid EmployeeId { get; set; } }
 public class PunchCorrection
 {

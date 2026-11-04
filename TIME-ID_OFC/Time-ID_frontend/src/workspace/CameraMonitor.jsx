@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, Camera, CircleStop, Plus, Radio, Trash2, Video } from "lucide-react";
 import { Heading } from "./Ui";
-import { addCameraSource, cameraMonitorData, monitorFace, removeCameraSource } from "../services/facial";
+import { addCameraSource, cameraMonitorData, monitorFace, removeCameraSource, saveCameraAlertPhoto } from "../services/facial";
 import "./CameraMonitor.css";
 
 let faceapi;
@@ -82,6 +82,16 @@ export default function CameraMonitor() {
                 if (!activeRef.current) return;
                 const result = await monitorFace(Array.from(face.descriptor));
                 results.push(result);
+                if (!result.matched && result.alertId && !result.hasPhoto) {
+                  const video = videoRef.current;
+                  const canvas = document.createElement("canvas");
+                  const scale = Math.min(1, 640 / video.videoWidth, 360 / video.videoHeight);
+                  canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+                  canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+                  canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+                  await saveCameraAlertPhoto(result.alertId, canvas.toDataURL("image/jpeg", 0.72));
+                  result.hasPhoto = true;
+                }
               }
               setDetections(results);
               const known = results.filter(result => result.matched).length;
@@ -136,7 +146,7 @@ export default function CameraMonitor() {
           ? <button className="btn danger" type="button" onClick={stop}><CircleStop size={17}/> Desligar câmera</button>
           : <button className="btn primary" type="button" onClick={start}><Radio size={17}/> Iniciar monitoramento</button>}</div>
         {detections.length > 0 && <div className="camera-detections" aria-live="polite">{detections.map((item, index) => <span className={item.matched ? "recognized" : "unmatched"} key={`${index}-${item.employee ?? "unknown"}`}>{item.matched ? item.employee : "Sem correspondência"}</span>)}</div>}
-        <p className="muted-text camera-privacy-note">Os quadros são analisados no navegador e descartados. O servidor recebe apenas o descritor para comparar e grava alertas sem imagem ou vídeo.</p>
+        <p className="muted-text camera-privacy-note">A imagem é analisada no navegador. Quando não há correspondência, uma foto reduzida é salva cifrada junto ao alerta para conferência do administrador.</p>
       </article>
 
       <article className="work-card camera-sources-card">
@@ -154,8 +164,9 @@ export default function CameraMonitor() {
     </section>
 
     <section className="work-card camera-alerts-card">
-      <div className="camera-card-heading"><div><h2><AlertTriangle size={19}/> Alertas de rosto sem correspondência</h2><p className="muted-text">Eventos repetidos da webcam são agrupados por um minuto.</p></div><span className="camera-alert-count">{cameraData.alerts.length}</span></div>
-      {cameraData.alerts.length === 0 ? <p className="muted-text">Nenhum alerta registrado.</p> : <ul className="camera-alert-list">{cameraData.alerts.map(alert => <li key={alert.id}><span className="camera-alert-mark"><AlertTriangle size={17}/></span><span><strong>{alert.status}</strong><small>{alert.cameraName}</small></span><time dateTime={alert.at}>{timestamp(alert.at)}</time></li>)}</ul>}
+      <div className="camera-card-heading"><div><h2><AlertTriangle size={19}/> Pessoas sem correspondência</h2><p className="muted-text">Alertas repetidos da webcam são agrupados por um minuto.</p></div><span className="camera-alert-count">{cameraData.alerts.length}</span></div>
+      {cameraData.alerts.length > 0 && <div className="camera-unknown-banner"><AlertTriangle size={20}/><span><strong>PESSOA NÃO CADASTRADA</strong><small>O rosto não encontrou um cadastro facial correspondente. Confira a foto: iluminação ou ângulo podem causar falhas no reconhecimento.</small></span></div>}
+      {cameraData.alerts.length === 0 ? <p className="muted-text">Nenhuma ocorrência para exibir.</p> : <div className="camera-alert-table-wrap"><table className="camera-alert-table"><thead><tr><th>Foto</th><th>Situação</th><th>Câmera</th><th>Data e hora</th></tr></thead><tbody>{cameraData.alerts.map(alert => <tr key={alert.id}><td>{alert.hasPhoto ? <img className="camera-alert-photo" src={`/api/facial/alerts/${alert.id}/photo`} alt="Foto registrada no alerta" loading="lazy"/> : <span className="camera-alert-photo-placeholder">Foto pendente</span>}</td><td><span className="camera-unknown-badge">PESSOA NÃO CADASTRADA</span></td><td>{alert.cameraName}</td><td><time dateTime={alert.at}>{timestamp(alert.at)}</time></td></tr>)}</tbody></table></div>}
     </section>
   </main>;
 }
