@@ -72,6 +72,12 @@ No endereço `/terminal`, a câmera detecta o rosto e tenta registrar automatica
 
 O reconhecimento é baseado em imagem 2D e não implementa prova de vida. Antes de usar biometria em uma operação real, a empresa precisa avaliar precisão, riscos de fraude, base legal, retenção dos dados e uma alternativa de registro.
 
+### Câmeras e alertas
+
+A página **Câmeras** é exclusiva do Administrador. Na primeira etapa, ela usa a webcam ligada ao computador do administrador quando ele inicia o monitoramento. O navegador compara os rostos capturados com os padrões faciais cadastrados de funcionários ativos presenciais ou híbridos. Se não encontrar uma correspondência confiável, grava um alerta com horário e origem; alertas repetidos da webcam são agrupados por um minuto. Não são guardados quadros nem vídeos. “Sem correspondência” não confirma que a pessoa não seja funcionária: iluminação, ângulo ou qualidade da imagem podem impedir o reconhecimento.
+
+O administrador também pode guardar cadastros futuros de câmeras RTSP ou ONVIF, com endereço e credenciais protegidos no armazenamento local. Esses cadastros ainda não exibem vídeo. A reprodução e análise de câmeras IP/NVR dependem de integrar e testar o conector compatível com os equipamentos do local.
+
 ## Férias e feriados
 
 Em **Férias**, o funcionário vinculado a uma conta pode solicitar e acompanhar seus períodos. Pode alterar ou cancelar uma solicitação enquanto ela estiver pendente. O administrador pode cadastrar para funcionários e aprovar ou recusar solicitações. Há filtro por situação, limite demonstrativo de 1 a 14 dias corridos por solicitação e bloqueio de períodos sobrepostos não recusados.

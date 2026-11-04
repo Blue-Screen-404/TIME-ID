@@ -15,3 +15,7 @@ export const facialProfiles = () => request("/profiles");
 export const enrollFace = (body) => request("/profiles", { method: "POST", body });
 export const removeFace = (employeeId) => request(`/profiles/${employeeId}`, { method: "DELETE" });
 export const facialPunch = (descriptor) => request("/terminal/punch", { method: "POST", body: { descriptor } });
+export const cameraMonitorData = () => request("/cameras");
+export const monitorFace = (descriptor) => request("/monitor/match", { method: "POST", body: { descriptor } });
+export const addCameraSource = (body) => request("/cameras", { method: "POST", body });
+export const removeCameraSource = (cameraId) => request(`/cameras/${cameraId}`, { method: "DELETE" });

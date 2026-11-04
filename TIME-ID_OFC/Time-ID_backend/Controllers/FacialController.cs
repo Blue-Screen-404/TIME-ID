@@ -9,6 +9,7 @@ public sealed class FacialController(DataStore store, IDataProtectionProvider pr
 {
     private static readonly string[] Kinds = { "Entrada", "Início do intervalo", "Retorno do intervalo", "Saída" };
     private readonly IDataProtector protector = protection.CreateProtector("TIMEID.FaceDescriptor.v1");
+    private readonly IDataProtector cameraProtector = protection.CreateProtector("TIMEID.CameraConnection.v1");
     private Guid ActorId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private static void Require(bool ok, string message) { if (!ok) throw new DomainError(400, message); }
     private static int Age(DateOnly birth, DateOnly today) => today.Year - birth.Year - (today.Month < birth.Month || today.Month == birth.Month && today.Day < birth.Day ? 1 : 0);
@@ -67,6 +68,90 @@ public sealed class FacialController(DataStore store, IDataProtectionProvider pr
         return new { removed = true };
     }));
 
+    [Authorize, HttpGet("cameras")]
+    public IActionResult Cameras() => Ok(store.Read(db =>
+    {
+        DataStore.Admin(DataStore.Actor(db, ActorId));
+        return new
+        {
+            sources = db.CameraSources.OrderBy(source => source.Name)
+                .Select(source => new { source.Id, source.Name, source.Protocol, source.CreatedAt, streamAvailable = false }).ToList(),
+            alerts = db.CameraAlerts.OrderByDescending(alert => alert.At).Take(50).ToList()
+        };
+    }));
+
+    [Authorize, HttpPost("cameras")]
+    public IActionResult AddCamera(CameraSourceInput input)
+    {
+        var admin = store.Read(db => DataStore.Actor(db, ActorId));
+        DataStore.Admin(admin);
+        if (!Uri.TryCreate(input.Endpoint, UriKind.Absolute, out var endpoint) ||
+            input.Protocol == "RTSP" && endpoint.Scheme is not ("rtsp" or "rtsps") ||
+            input.Protocol == "ONVIF" && endpoint.Scheme is not ("http" or "https"))
+            throw new DomainError(400, "Informe um endereço RTSP válido ou o endereço HTTP/HTTPS do serviço ONVIF.");
+
+        var connection = System.Text.Json.JsonSerializer.Serialize(new { input.Endpoint, input.Username, input.Password });
+        var source = new CameraSource
+        {
+            Name = input.Name.Trim(),
+            Protocol = input.Protocol,
+            ProtectedConnection = cameraProtector.Protect(connection)
+        };
+        return Ok(store.Write(db =>
+        {
+            DataStore.Admin(DataStore.Actor(db, ActorId));
+            db.CameraSources.Add(source);
+            DataStore.Log(db, DataStore.Actor(db, ActorId), "Cadastrou câmera", "Monitoramento de câmeras", $"{source.Name} ({source.Protocol}); reprodução pendente de integração.");
+            return new { source.Id, source.Name, source.Protocol, source.CreatedAt, streamAvailable = false };
+        }));
+    }
+
+    [Authorize, HttpDelete("cameras/{cameraId:guid}")]
+    public IActionResult RemoveCamera(Guid cameraId) => Ok(store.Write(db =>
+    {
+        var admin = DataStore.Actor(db, ActorId);
+        DataStore.Admin(admin);
+        var source = db.CameraSources.FirstOrDefault(item => item.Id == cameraId)
+            ?? throw new DomainError(404, "Câmera não encontrada.");
+        db.CameraSources.Remove(source);
+        DataStore.Log(db, admin, "Removeu câmera", "Monitoramento de câmeras", source.Name);
+        return new { removed = true };
+    }));
+
+    [Authorize, HttpPost("monitor/match")]
+    public IActionResult MonitorMatch(FaceMatchInput input)
+    {
+        DataStore.Admin(store.Read(db => DataStore.Actor(db, ActorId)));
+        if (!ValidDescriptor(input.Descriptor)) return BadRequest(new { title = "Não foi possível analisar o rosto capturado." });
+
+        var match = store.Read(db => MatchEmployee(db, input.Descriptor));
+        if (match is { } found) return Ok(new { matched = true, employee = found.Name, at = DateTimeOffset.UtcNow, alertCreated = false });
+
+        const string cameraId = "webcam-local";
+        var now = DateTimeOffset.UtcNow;
+        var recentAlertExists = store.Read(db => db.CameraAlerts.Any(alert => alert.CameraId == cameraId && now - alert.At < TimeSpan.FromMinutes(1)));
+        if (recentAlertExists) return Ok(new { matched = false, employee = (string?)null, at = now, alertCreated = false });
+
+        var alert = store.Write(db =>
+        {
+            var admin = DataStore.Actor(db, ActorId);
+            DataStore.Admin(admin);
+            if (db.CameraAlerts.Any(item => item.CameraId == cameraId && now - item.At < TimeSpan.FromMinutes(1))) return null;
+            db.CameraAlerts.RemoveAll(item => item.At < now.AddDays(-30));
+            var created = new CameraAlert(Guid.NewGuid(), cameraId, "Webcam local", now, "Sem correspondência facial");
+            db.CameraAlerts.Add(created);
+            if (db.CameraAlerts.Count > 500)
+            {
+                var removeCount = db.CameraAlerts.Count - 500;
+                var oldestIds = db.CameraAlerts.OrderBy(item => item.At).Take(removeCount).Select(item => item.Id).ToHashSet();
+                db.CameraAlerts.RemoveAll(item => oldestIds.Contains(item.Id));
+            }
+            DataStore.Log(db, admin, "Alerta de rosto sem correspondência", "Monitoramento de câmeras", "Webcam local; sem imagem ou vídeo armazenado.");
+            return created;
+        });
+        return Ok(new { matched = false, employee = (string?)null, at = now, alertCreated = alert is not null });
+    }
+
     // O terminal captura e compara no próprio computador. A rota de batida só aceita
     // conexões locais; imagens e vetores faciais não são enviados ao servidor.
     [AllowAnonymous, HttpPost("terminal/punch")]
@@ -109,5 +194,25 @@ public sealed class FacialController(DataStore store, IDataProtectionProvider pr
         double sum = 0;
         for (int i = 0; i < left.Length; i++) { var delta = left[i] - right[i]; sum += delta * delta; }
         return Math.Sqrt(sum);
+    }
+
+    private (string Name, double Distance)? MatchEmployee(Database db, float[] descriptor)
+    {
+        var candidates = new List<(string Name, double Distance)>();
+        foreach (var profile in db.FaceProfiles)
+        {
+            var employee = db.Employees.FirstOrDefault(item => item.Id == profile.EmployeeId && item.Active && item.WorkMode != "Remoto");
+            if (employee is null) continue;
+            try
+            {
+                var saved = System.Text.Json.JsonSerializer.Deserialize<float[]>(protector.Unprotect(profile.ProtectedDescriptor));
+                if (saved is { Length: 128 }) candidates.Add((employee.Name, Distance(descriptor, saved)));
+            }
+            catch (System.Security.Cryptography.CryptographicException) { /* Perfil protegido por outra chave: ignorar. */ }
+        }
+        var ranked = candidates.OrderBy(item => item.Distance).Take(2).ToArray();
+        if (ranked.Length == 0 || ranked[0].Distance > 0.48 || ranked.Length > 1 && ranked[1].Distance - ranked[0].Distance < 0.08)
+            return null;
+        return ranked[0];
     }
 }

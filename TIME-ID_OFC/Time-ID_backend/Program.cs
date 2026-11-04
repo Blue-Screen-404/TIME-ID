@@ -103,7 +103,7 @@ public class Program
                 ? Results.Redirect("/inicio")
                 : Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
         app.MapGet("/terminal", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
-        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
+        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/cameras", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
         {
             app.MapGet(path, () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
                 .RequireAuthorization();

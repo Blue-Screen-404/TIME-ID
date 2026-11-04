@@ -10,6 +10,7 @@ import Attendance from "./Attendance";
 import Reports from "./Reports";
 import Settings from "./Settings";
 import { FacialAdmin } from "./Facial";
+import CameraMonitor from "./CameraMonitor";
 import { Field, Modal } from "./Ui";
 import { api } from "../services/workspace";
 import HelpChat from "./HelpChat";
@@ -27,7 +28,7 @@ const departmentExamples = {
  "Produção": "Planejamento e execução da produção e controle de qualidade.",
  "Atendimento ao Cliente": "Atendimento de solicitações, dúvidas e suporte aos clientes."
 };
-const labels={inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
+const labels={inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",cameras:"Câmeras",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
 export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavegar, aoSair, busy:authBusy }) {
  const page=paginaAtual.replace(/^\//,"")||"inicio", admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
  const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false),[themeBrush,setThemeBrush]=useState(false);
@@ -63,7 +64,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  async function punch(employeeId){try{await mutate("/punches","POST",{employeeId});message("Ponto registrado com o horário do servidor.");}catch(err){message(err.message,true);}}
  async function preferences(value){try{await mutate("/preferences","PUT",value);}catch(err){message(err.message,true);}}
  if(!data)return <main className="loading-panel"><h2>TIMEID</h2><p role={loadError?"alert":"status"}>{loadError||"Carregando seus dados..."}</p>{loadError&&<button className="btn primary" onClick={()=>refresh().catch(err=>setLoadError(err.message))}>Tentar novamente</button>}</main>;
- const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios"].includes(page)||!facialAccess&&page==="facial";
+ const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios","cameras"].includes(page)||!facialAccess&&page==="facial";
  const pending=data.vacations.filter(v=>v.status==="Solicitada");
  const field=(label,key,props={})=><Field label={label} value={editor.draft[key]??""} onChange={e=>change(key,e.target.value)} {...props}/>;
  const selectedEmployee=editor?.draft.employeeId;
@@ -81,6 +82,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {page==="departamentos"&&<Departments data={data} edit={edit} remove={remove}/>}
  {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy}/>}
  {page==="facial"&&facialAccess&&<FacialAdmin data={data} message={message} canManage={admin}/>}
+ {page==="cameras"&&admin&&<CameraMonitor/>}
  {page==="ferias"&&<Vacations data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="feriados"&&<Holidays data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="relatorios"&&<Reports data={data}/>}

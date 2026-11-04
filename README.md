@@ -132,6 +132,8 @@ As permissões são verificadas também pelo servidor, não apenas pelo menu.
 
 O terminal reconhece padrões faciais 2D e não inclui verificação de prova de vida. Antes de usar as marcações como controle oficial, a empresa deve avaliar a precisão e o risco de fraude com fotos ou telas, definir retenção e base legal para biometria e manter o ponto pelo app como alternativa. Dados biométricos são dados pessoais sensíveis pela LGPD.
 
+A página **Câmeras**, visível somente ao Administrador, permite ligar a webcam local para comparar rostos com os padrões já cadastrados e registrar alertas de “sem correspondência” sem salvar imagens. Também permite cadastrar fontes RTSP/ONVIF para avaliação futura; esses fluxos reais ainda não são reproduzidos até que o conector apropriado seja definido e testado. A página não substitui prova de vida e uma falha de correspondência não comprova que a pessoa não seja funcionária.
+
 No canto superior direito, clique no perfil e escolha **Ver perfil**. O administrador pode editar o próprio nome, e-mail e foto; o usuário comum pode alterar somente a foto nesse modal. O perfil de acesso não é alterado ali. As fotos aceitam PNG, JPEG ou WebP de até 2 MB.
 
 O modal de edição bloqueia a interação com o restante da página até **Salvar** ou **Cancelar**; clicar fora ou pressionar Esc não o fecha. Alteração de senha e autenticação em duas etapas ficam em **Configurações**. Ao ativar duas etapas, cadastre a chave em um aplicativo autenticador e guarde os códigos de recuperação exibidos; cada código de recuperação só pode ser usado uma vez.
@@ -148,7 +150,7 @@ Esta persistência local foi feita para uma única instância do servidor. Não 
 
 - O ponto segue quatro marcações no mesmo dia, no horário de Brasília. Correções preservam a sequência e exigem justificativa; só a última marcação do dia pode ser excluída. Há um intervalo mínimo de 30 segundos entre registros para evitar duplicação por clique.
 - O espelho soma pares concluídos. Jornada atravessando meia-noite, banco de horas, horas extras, atrasos e folha de pagamento ainda não são calculados.
-- As notificações aparecem dentro do sistema; não há envio de e-mail ou SMS. Não há integração com CEP, biometria ou reconhecimento facial.
+- As notificações aparecem dentro do sistema; não há envio de e-mail ou SMS. Não há integração com CEP ou serviços externos de biometria e reconhecimento facial.
 - Há dois perfis de acesso. A indicação de líder de departamento não cria um terceiro perfil de permissões.
 - A estrutura atual usa arquivo JSON local, sem banco SQL ou sincronização entre servidores.
 
@@ -172,7 +174,7 @@ Reinicie o servidor depois de configurar. O modelo padrão é `gemini-3.5-flash-
 
 - Banco de dados para implantação com múltiplas instâncias.
 - Regras avançadas de jornada, banco de horas e folha de pagamento.
-- Reconhecimento facial, geolocalização e controle de visitantes.
+- Prova de vida no reconhecimento facial, geolocalização e controle de visitantes.
 - Monitoramento de segurança, alertas externos e assistente de RH com IA.
 
 ## Equipe
