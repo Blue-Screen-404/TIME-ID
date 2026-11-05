@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using TimeId.Services;
 
 public class Program
@@ -17,11 +18,23 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<HelpChatService>();
-        // A conexão é configurada para uso futuro; SQLite só cria o arquivo quando
-        // alguma operação abre a conexão ou executa uma migração explicitamente.
-        string sqliteConnection = builder.Configuration.GetConnectionString("TimeId")
-            ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "timeid.sqlite")}";
-        builder.Services.AddDbContext<TimeIdDbContext>(options => options.UseSqlite(sqliteConnection));
+        SqliteConnectionStringBuilder sqliteConnection;
+        if (builder.Configuration["TIMEID_DATA_PATH"] is { Length: > 0 } dataPath)
+        {
+            sqliteConnection = new SqliteConnectionStringBuilder { DataSource = dataPath };
+        }
+        else
+        {
+            string configuredConnection = builder.Configuration.GetConnectionString("TimeId")
+                ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "timeid.sqlite")}";
+            sqliteConnection = new SqliteConnectionStringBuilder(configuredConnection);
+        }
+        if (sqliteConnection.DataSource == ":memory:")
+            throw new InvalidOperationException("TIMEID requer um arquivo SQLite persistente; bancos em memória não são suportados.");
+        if (!Path.IsPathRooted(sqliteConnection.DataSource))
+            sqliteConnection.DataSource = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, sqliteConnection.DataSource));
+        Directory.CreateDirectory(Path.GetDirectoryName(sqliteConnection.DataSource)!);
+        builder.Services.AddDbContextFactory<TimeIdDbContext>(options => options.UseSqlite(sqliteConnection.ToString()));
         // Cookies continuam invalidados por session stamp; chave local também protege os
         // descritores faciais cifrados que o administrador cadastrará no futuro.
         IDataProtectionBuilder dataProtection = builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(
@@ -73,6 +86,7 @@ public class Program
         builder.Services.AddAuthorization();
 
         WebApplication app = builder.Build();
+        app.Services.GetRequiredService<DataStore>();
         app.Use(async (context, next) =>
         {
             if (context.Request.Path.StartsWithSegments("/api")) context.Response.Headers.CacheControl = "no-store";
@@ -90,7 +104,7 @@ public class Program
         app.MapGet("/api", () => Results.Ok(new
         {
             application = "TIME-ID API",
-            mode = "Gestão local com persistência em arquivo",
+            mode = "Gestão local com persistência SQLite",
             login = "/api/auth/login",
             me = "/api/auth/me",
             logout = "/api/auth/logout"

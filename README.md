@@ -140,11 +140,11 @@ O modal de edição bloqueia a interação com o restante da página até **Salv
 
 ### Dados salvos e backup
 
-O servidor grava as informações em `TIME-ID_OFC/Time-ID_backend/App_Data/timeid.json`. Esse arquivo contém contas, senhas protegidas por hash, funcionários, departamentos, marcações, férias, feriados, preferências e auditoria. Ele não entra no Git. As alterações de perfil também permanecem salvas.
+O servidor grava as informações em `TIME-ID_OFC/Time-ID_backend/App_Data/timeid.sqlite`, um banco SQLite local que contém contas, senhas protegidas por hash, funcionários, departamentos, marcações, férias, feriados, preferências e auditoria. O banco não entra no Git. Na primeira inicialização, um `App_Data/timeid.json` antigo é importado automaticamente se o SQLite ainda não tiver dados; o JSON é mantido intacto como cópia de origem.
 
-Em **Configurações > Backup**, o administrador pode baixar uma cópia completa. Guarde-a em local restrito: ela inclui dados pessoais e informações de segurança das contas. A restauração é manual: pare o servidor, preserve uma cópia do arquivo atual e substitua `App_Data/timeid.json` pelo backup antes de iniciar novamente.
+Em **Configurações > Backup**, o administrador pode baixar uma cópia completa em JSON. Guarde-a em local restrito: ela inclui dados pessoais e informações de segurança das contas. Para restaurá-la manualmente, pare o servidor, preserve o arquivo SQLite atual, coloque o JSON de backup em `App_Data/timeid.json` e mova o SQLite atual para outro nome. Ao iniciar, o sistema importará o JSON para um novo banco.
 
-Esta persistência local foi feita para uma única instância do servidor. Não execute dois servidores gravando no mesmo arquivo. Para testes ou outra instalação, a configuração `TIMEID_DATA_PATH` permite escolher outro arquivo.
+Esta persistência local foi feita para uma única instância do servidor. Não execute dois servidores usando o mesmo arquivo. Para testes ou outra instalação, a configuração `TIMEID_DATA_PATH` permite escolher outro arquivo SQLite.
 
 ### Limites da versão atual
 
@@ -152,7 +152,7 @@ Esta persistência local foi feita para uma única instância do servidor. Não 
 - O espelho soma pares concluídos. Jornada atravessando meia-noite, banco de horas, horas extras, atrasos e folha de pagamento ainda não são calculados.
 - As notificações aparecem dentro do sistema; não há envio de e-mail ou SMS. Não há integração com CEP ou serviços externos de biometria e reconhecimento facial.
 - Há dois perfis de acesso. A indicação de líder de departamento não cria um terceiro perfil de permissões.
-- A estrutura atual usa arquivo JSON local, sem banco SQL ou sincronização entre servidores.
+- A estrutura usa SQLite local, sem sincronização entre servidores.
 
 ## Arquitetura e desenvolvimento
 

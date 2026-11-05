@@ -6,7 +6,7 @@ $project = Join-Path $root "TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj"
 $testOutput = Join-Path $root "artifacts/crud-tests"
 $dll = Join-Path $testOutput "TIME-ID_OFC.dll"
 $baseUrl = "http://localhost:$Port"
-$testData = Join-Path $root ("artifacts/test-crud-" + [guid]::NewGuid() + ".json")
+$testData = Join-Path $root ("artifacts/test-crud-" + [guid]::NewGuid() + ".sqlite")
 $script:serverProcess = $null
 $logPrefix = Join-Path ([System.IO.Path]::GetTempPath()) ("timeid-login-" + [guid]::NewGuid())
 $script:runNumber = 0
@@ -88,6 +88,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Build falhou." }
     $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
     try { $listener.Start() } finally { $listener.Stop() }
+    Start-TestServer
+    Stop-TestServer
+    $sqliteHeader = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($testData), 0, 15)
+    if ($sqliteHeader -ne "SQLite format 3") { throw "O armazenamento de teste nao e um banco SQLite." }
     Start-TestServer
     $admin = New-Object Microsoft.PowerShell.Commands.WebRequestSession
     $regular = New-Object Microsoft.PowerShell.Commands.WebRequestSession
