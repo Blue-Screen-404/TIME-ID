@@ -1,0 +1,226 @@
+{
+  "info": {
+    "name": "TIMEID - geolocalização manual",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Use com o ambiente gerado por scripts/Start-GeolocationManual.ps1. Execute manualmente na ordem. Coordenadas fictícias. Cookie mantido pelo Postman. Não executar contra produção."
+  },
+  "item": [
+    {
+      "name": "01 - Entrar como administrador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "description": "Esperado: 200. O Postman guarda o cookie de sessão.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"teste@timeid.local\",\n  \"password\": \"TimeId@123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "02 - Consultar configurações",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/geolocation/settings",
+        "description": "Esperado: 200. Não modifica as regras."
+      }
+    },
+    {
+      "name": "03 - Listar locais permitidos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/work-locations",
+        "description": "Esperado: 200. O ambiente já possui um local fictício em 0,0, com raio de 100 metros."
+      }
+    },
+    {
+      "name": "04 - Simular dentro da área",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/work-locations/validate/{{employeeId}}",
+        "description": "Esperado: 200, status DentroDaArea. Não grava ponto.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"latitude\": 0,\n  \"longitude\": 0,\n  \"accuracyMeters\": 5,\n  \"capturedAt\": \"{{$isoTimestamp}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "05 - Simular fora da área",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/work-locations/validate/{{employeeId}}",
+        "description": "Esperado: 200, status ForaDaArea. Não grava ponto.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"latitude\": 0,\n  \"longitude\": 1,\n  \"accuracyMeters\": 5,\n  \"capturedAt\": \"{{$isoTimestamp}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "06 - Tentar bater fora sem justificativa",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/workspace/punches",
+        "description": "Esperado: 400 com mensagem de justificativa. Não grava batida. Considera configurações iniciais.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"location\": {\n    \"latitude\": 0,\n    \"longitude\": 1,\n    \"accuracyMeters\": 5,\n    \"capturedAt\": \"{{$isoTimestamp}}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "07 - Bater fora com justificativa",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/workspace/punches",
+        "description": "Esperado: 200, geolocation.reviewStatus Pendente. Grava ponto. Guarda punchId para a análise. Em caso de repetição, aguarde 30 segundos; limite de quatro batidas por dia.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"location\": {\n    \"latitude\": 0,\n    \"longitude\": 1,\n    \"accuracyMeters\": 5,\n    \"capturedAt\": \"{{$isoTimestamp}}\"\n  },\n  \"locationJustification\": \"Atendimento externo para teste manual\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { const p = pm.response.json(); pm.environment.set('punchId', p.id); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Consultar fila de análise",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/geolocation/reviews",
+        "description": "Esperado: 200, com a marcação pendente em items."
+      }
+    },
+    {
+      "name": "09 - Aceitar justificativa",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/workspace/punches/{{punchId}}/location-review",
+        "description": "Esperado: 200, reviewStatus Aceita; status geográfico permanece ForaDaArea. Para testar recusa, troque decision por Recusada antes da primeira análise. Decisão concluída não pode ser sobrescrita.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"decision\": \"Aceita\",\n  \"reason\": \"Atendimento externo confirmado no teste manual\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10 - Conferir marcações salvas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/workspace",
+        "description": "Esperado: 200. Consulte punches[].geolocation para conferir captura, justificativa e análise."
+      }
+    },
+    {
+      "name": "11 - Bater dentro da área",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/workspace/punches",
+        "description": "Aguarde ao menos 30 segundos após a etapa 07. Esperado: 200, DentroDaArea e NaoNecessaria. Grava outra batida.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"location\": {\n    \"latitude\": 0,\n    \"longitude\": 0,\n    \"accuracyMeters\": 5,\n    \"capturedAt\": \"{{$isoTimestamp}}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "12 - Consultar situação do provedor",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/geolocation/provider-status",
+        "description": "Esperado: 200, configured false e enabled false no ambiente inicial. A validação de coordenadas funciona sem serviço externo."
+      }
+    }
+  ]
+}

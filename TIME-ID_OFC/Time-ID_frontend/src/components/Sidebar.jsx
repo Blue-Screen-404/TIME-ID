@@ -1,6 +1,6 @@
-import { House, Clock3, Users, Plus, List, Building2, BarChart3, Umbrella, CalendarDays, Settings, LogOut, ScanFace } from "lucide-react";
+import { House, Clock3, Users, Plus, List, Building2, BarChart3, Umbrella, CalendarDays, Settings, LogOut, ScanFace, MapPin } from "lucide-react";
 const items = [
-  ["Início", House, "inicio"], ["Ponto", Clock3, "ponto"],
+  ["Início", House, "inicio"], ["Ponto", Clock3, "ponto"], ["Geolocalização", MapPin, "geolocalizacao"],
   ["Funcionários", Users, "funcionarios"], ["Cadastrar", Plus, "cadastro"],
   ["Listar", List, "listar"], ["Departamentos", Building2, "departamentos"],
   ["Reconhecimento facial", ScanFace, "facial"], ["Relatórios", BarChart3, "relatorios"], ["Férias", Umbrella, "ferias"],

@@ -5,6 +5,8 @@ namespace TimeId.Operations;
 
 public class Database
 {
+    public GeolocationSettings GeolocationSettings { get; set; } = new();
+    public List<WorkLocation> WorkLocations { get; set; } = new();
     public int Version { get; set; } = 1;
     public List<Account> Accounts { get; set; } = new();
     public List<Staff> Employees { get; set; } = new();
@@ -100,6 +102,7 @@ public class Team
 }
 public class Punch
 {
+    public PunchGeolocation? Geolocation { get; set; }
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid EmployeeId { get; set; }
     public string Kind { get; set; } = "Entrada";
@@ -124,7 +127,12 @@ public class FaceMatchInput
 {
     [Required] public float[] Descriptor { get; set; } = Array.Empty<float>();
 }
-public class PunchInput { public Guid EmployeeId { get; set; } }
+public class PunchInput
+{
+    public Guid EmployeeId { get; set; }
+    public TimeId.DTOs.Geolocation.PunchLocationInput? Location { get; set; }
+    [StringLength(500)] public string? LocationJustification { get; set; }
+}
 public class PunchCorrection
 {
     public DateTimeOffset At { get; set; }

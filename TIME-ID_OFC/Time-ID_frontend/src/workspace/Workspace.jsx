@@ -7,6 +7,7 @@ import Employees from "./Employees";
 import EmployeeForm from "./EmployeeForm";
 import { Departments, Vacations, Holidays } from "./Records";
 import Attendance from "./Attendance";
+import Geolocation from "./Geolocation";
 import Reports from "./Reports";
 import Settings from "./Settings";
 import { FacialAdmin } from "./Facial";
@@ -25,7 +26,7 @@ const departmentExamples = {
  "Produção": "Planejamento e execução da produção e controle de qualidade.",
  "Atendimento ao Cliente": "Atendimento de solicitações, dúvidas e suporte aos clientes."
 };
-const labels={inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
+const labels={geolocalizacao:"Geolocalização",inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
 export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavegar, aoSair, busy:authBusy }) {
  const page=paginaAtual.replace(/^\//,"")||"inicio", admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
  const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false);
@@ -59,7 +60,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  async function punch(employeeId){try{await mutate("/punches","POST",{employeeId});message("Ponto registrado com o horário do servidor.");}catch(err){message(err.message,true);}}
  async function preferences(value){try{await mutate("/preferences","PUT",value);}catch(err){message(err.message,true);}}
  if(!data)return <main className="loading-panel"><h2>TIMEID</h2><p role={loadError?"alert":"status"}>{loadError||"Carregando seus dados..."}</p>{loadError&&<button className="btn primary" onClick={()=>refresh().catch(err=>setLoadError(err.message))}>Tentar novamente</button>}</main>;
- const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios"].includes(page)||!facialAccess&&page==="facial";
+ const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios","geolocalizacao"].includes(page)||!facialAccess&&page==="facial";
  const pending=data.vacations.filter(v=>v.status==="Solicitada");
  const field=(label,key,props={})=><Field label={label} value={editor.draft[key]??""} onChange={e=>change(key,e.target.value)} {...props}/>;
  const selectedEmployee=editor?.draft.employeeId;
@@ -75,7 +76,8 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {["funcionarios","listar"].includes(page)&&<Employees data={data} query={query} setQuery={setQuery} navigate={navigate} edit={editStaff} remove={remove} list={page==="listar"}/>}
  {page==="cadastro"&&<EmployeeForm key={employee?.id??"new"} data={data} employee={employee} save={saveStaff} createDepartment={()=>edit("departments")} cancel={()=>navigate("listar")} busy={busy} error={error}/>}
  {page==="departamentos"&&<Departments data={data} edit={edit} remove={remove}/>}
- {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy}/>}
+ {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy} refresh={refresh}/>}
+ {page==="geolocalizacao"&&admin&&<Geolocation data={data} refresh={refresh} message={message}/>}
  {page==="facial"&&facialAccess&&<FacialAdmin data={data} message={message} canManage={admin}/>}
  {page==="ferias"&&<Vacations data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="feriados"&&<Holidays data={data} admin={admin} edit={edit} remove={remove}/>}

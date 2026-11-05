@@ -154,9 +154,27 @@ public class WorkspaceController(DataStore store) : ControllerBase
         var day = db.Punches.Where(p => p.EmployeeId == staff.Id && DataStore.Date(p.At) == DataStore.Today).OrderBy(p => p.At).ToList();
         Require(day.Count < 4, "A jornada de hoje já foi encerrada.");
         Require(day.Count == 0 || (DateTimeOffset.UtcNow - day[^1].At).TotalSeconds >= 30, "Aguarde 30 segundos antes de registrar outra marcação.");
-        var punch = new Punch { EmployeeId = staff.Id, Kind = Kinds[day.Count], At = DateTimeOffset.UtcNow, Source = "App" };
+        var now = DateTimeOffset.UtcNow;
+        var geolocation = TimeId.Services.PunchGeolocationService.Capture(db, staff, input, now);
+        var punch = new Punch { EmployeeId = staff.Id, Kind = Kinds[day.Count], At = now, Source = "App", Geolocation = geolocation };
         db.Punches.Add(punch); DataStore.Log(db, actor, "Registrou", "Ponto", $"{staff.Name}: {punch.Kind}"); return punch;
     }));
+    [HttpPost("punches/{id:guid}/location-review")]
+    public IActionResult ReviewPunchLocation(Guid id, TimeId.DTOs.Geolocation.ReviewPunchLocationRequest input) => Ok(store.Write(db =>
+    {
+        var actor = DataStore.Actor(db, ActorId);
+        var punch = db.Punches.FirstOrDefault(p => p.Id == id) ?? throw new DomainError(404, "Marcação não encontrada.");
+        TimeId.Services.GeolocationAccess.Require(TimeId.Services.GeolocationAccess.CanReview(db, actor, punch.EmployeeId));
+        var location = punch.Geolocation ?? throw new DomainError(400, "Marcação sem dados de geolocalização.");
+        Require(location.ReviewStatus == "Pendente", "A localização não possui análise pendente.");
+        Require(input.Decision is "Aceita" or "Recusada", "Decisão inválida.");
+        Require(!string.IsNullOrWhiteSpace(input.Reason) && input.Reason.Trim().Length >= 5 && input.Reason.Length <= 500, "Informe o motivo da análise entre 5 e 500 caracteres.");
+        location.ReviewStatus = input.Decision; location.ReviewReason = input.Reason.Trim();
+        location.ReviewedBy = actor.Id; location.ReviewedAt = DateTimeOffset.UtcNow;
+        DataStore.Log(db, actor, "Analisou localização", "Ponto", $"{id}: {input.Decision}");
+        return punch;
+    }));
+
     [HttpPut("punches/{id:guid}")]
     public IActionResult CorrectPunch(Guid id, PunchCorrection input) => Ok(store.Write(db =>
     {
