@@ -12,6 +12,7 @@ public class Database
     public List<Staff> Employees { get; set; } = new();
     public List<Team> Departments { get; set; } = new();
     public List<Punch> Punches { get; set; } = new();
+    public List<EmployeeLiveLocation> LiveLocations { get; set; } = new();
     public List<FaceProfile> FaceProfiles { get; set; } = new();
     public List<Leave> Vacations { get; set; } = new();
     public List<DayOff> Holidays { get; set; } = new();
@@ -109,6 +110,14 @@ public class Punch
     public DateTimeOffset At { get; set; }
     public string? Correction { get; set; }
     public string Source { get; set; } = "App";
+}
+public class EmployeeLiveLocation
+{
+    public Guid EmployeeId { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public double AccuracyMeters { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }
 public class FaceProfile
 {

@@ -12,7 +12,8 @@ import Reports from "./Reports";
 import Settings from "./Settings";
 import { FacialAdmin } from "./Facial";
 import { Field, Modal } from "./Ui";
-import { api } from "../services/workspace";
+import { api, dayKey } from "../services/workspace";
+import { currentPosition } from "../services/geolocation";
 import "../pages/Inicio.css";
 import "./Workspace.css";
 const departmentExamples = {
@@ -30,8 +31,11 @@ const labels={geolocalizacao:"Geolocalização",inicio:"Início",ponto:"Ponto",f
 export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavegar, aoSair, busy:authBusy }) {
  const route=paginaAtual.replace(/^\//,"")||"inicio", mapRoute=route.match(/^geolocalizacao\/mapa\/([^/]+)$/), page=mapRoute?"geolocalizacao":route, admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
  const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false);
+ const trackingEmployeeId=data?.employeeId;
+ const trackingActive=!!trackingEmployeeId&&data.punches.filter(p=>p.employeeId===trackingEmployeeId&&dayKey(p.at)===data.today).length%2===1;
  const refresh=useCallback(async()=>{const next=await api();setData(next);setLoadError("");},[]);
- useEffect(()=>{let active=true;const load=()=>api().then(next=>{if(active){setData(next);setLoadError("");}}).catch(err=>{if(active)setLoadError(err.message);});const onVisible=()=>{if(document.visibilityState==="visible")load();};load();window.addEventListener("focus",onVisible);document.addEventListener("visibilitychange",onVisible);return()=>{active=false;window.removeEventListener("focus",onVisible);document.removeEventListener("visibilitychange",onVisible);};},[user.id,page]);
+ useEffect(()=>{let active=true;const load=()=>api().then(next=>{if(active){setData(next);setLoadError("");}}).catch(err=>{if(active)setLoadError(err.message);});const onVisible=()=>{if(document.visibilityState==="visible")load();};load();const timer=page==="geolocalizacao"?window.setInterval(load,60000):null;window.addEventListener("focus",onVisible);document.addEventListener("visibilitychange",onVisible);return()=>{active=false;if(timer)window.clearInterval(timer);window.removeEventListener("focus",onVisible);document.removeEventListener("visibilitychange",onVisible);};},[user.id,page]);
+ useEffect(()=>{if(!trackingActive||!trackingEmployeeId)return;let stopped=false;const update=async()=>{try{const location=await currentPosition();if(!stopped)await api("/live-location",{method:"POST",body:{employeeId:trackingEmployeeId,latitude:location.latitude,longitude:location.longitude,accuracyMeters:location.accuracyMeters}});}catch{/* Keep the app usable if location permission is unavailable. */}};update();const timer=window.setInterval(update,180000);return()=>{stopped=true;window.clearInterval(timer);};},[trackingEmployeeId,trackingActive]);
  useEffect(()=>{document.title=`${labels[page]??"Início"} — TIMEID`;},[page]);
  useEffect(()=>{if(data)document.documentElement.dataset.theme=data.preferences.theme;return()=>{delete document.documentElement.dataset.theme;};},[data?.preferences.theme]);
  function message(text,isError=false){setNotice({text,isError});}
@@ -77,7 +81,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {page==="cadastro"&&<EmployeeForm key={employee?.id??"new"} data={data} employee={employee} save={saveStaff} createDepartment={()=>edit("departments")} cancel={()=>navigate("listar")} busy={busy} error={error}/>}
  {page==="departamentos"&&<Departments data={data} edit={edit} remove={remove}/>}
  {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy} refresh={refresh}/>}
- {page==="geolocalizacao"&&admin&&<Geolocation data={data} refresh={refresh} message={message} selectedPunchId={mapRoute?.[1]} navigate={navigate}/>}
+ {page==="geolocalizacao"&&admin&&<Geolocation data={data} refresh={refresh} message={message} selectedEmployeeId={mapRoute?.[1]} navigate={navigate}/>}
  {page==="facial"&&facialAccess&&<FacialAdmin data={data} message={message} canManage={admin}/>}
  {page==="ferias"&&<Vacations data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="feriados"&&<Holidays data={data} admin={admin} edit={edit} remove={remove}/>}
