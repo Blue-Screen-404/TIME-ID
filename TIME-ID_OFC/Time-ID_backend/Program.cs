@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using TimeId.Services;
 
 public class Program
@@ -21,7 +22,13 @@ public class Program
         // alguma operação abre a conexão ou executa uma migração explicitamente.
         string sqliteConnection = builder.Configuration.GetConnectionString("TimeId")
             ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "timeid.sqlite")}";
-        builder.Services.AddDbContext<TimeIdDbContext>(options => options.UseSqlite(sqliteConnection));
+        // Resolver caminho relativo sempre a partir da pasta do backend.
+        var sqlite = new SqliteConnectionStringBuilder(sqliteConnection);
+        if (!Path.IsPathRooted(sqlite.DataSource) && sqlite.DataSource != ":memory:")
+            sqlite.DataSource = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, sqlite.DataSource));
+        if (sqlite.DataSource != ":memory:")
+            Directory.CreateDirectory(Path.GetDirectoryName(sqlite.DataSource)!);
+        builder.Services.AddDbContextFactory<TimeIdDbContext>(options => options.UseSqlite(sqlite.ToString()));
         // Cookies continuam invalidados por session stamp; chave local também protege os
         // descritores faciais cifrados que o administrador cadastrará no futuro.
         IDataProtectionBuilder dataProtection = builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(
@@ -73,6 +80,11 @@ public class Program
         builder.Services.AddAuthorization();
 
         WebApplication app = builder.Build();
+        // Inicializar e migrar o SQLite na inicializacao, sem exigir login.
+        using (var scope = app.Services.CreateScope())
+        {
+            scope.ServiceProvider.GetRequiredService<DataStore>();
+        }
         app.Use(async (context, next) =>
         {
             if (context.Request.Path.StartsWithSegments("/api")) context.Response.Headers.CacheControl = "no-store";
@@ -90,7 +102,7 @@ public class Program
         app.MapGet("/api", () => Results.Ok(new
         {
             application = "TIME-ID API",
-            mode = "Gestão local com persistência em arquivo",
+            mode = "Gestão local com persistência SQLite",
             login = "/api/auth/login",
             me = "/api/auth/me",
             logout = "/api/auth/logout"
