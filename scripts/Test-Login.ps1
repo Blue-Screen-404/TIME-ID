@@ -6,7 +6,9 @@ $project = Join-Path $root "TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj"
 $testOutput = Join-Path $root "artifacts/tests"
 $dll = Join-Path $testOutput "TIME-ID_OFC.dll"
 $baseUrl = "http://localhost:$Port"
-$testData = Join-Path $root ("artifacts/test-login-" + [guid]::NewGuid() + ".json")
+$testData = Join-Path $root ("artifacts/test-login-" + [guid]::NewGuid() + ".sqlite")
+$script:databasePath = $testData
+$script:legacyDataPath = $null
 $script:serverProcess = $null
 $logPrefix = Join-Path ([System.IO.Path]::GetTempPath()) ("timeid-login-" + [guid]::NewGuid())
 $script:runNumber = 0
@@ -15,9 +17,13 @@ function Start-TestServer {
     $script:runNumber++
     $stdout = "$logPrefix-$script:runNumber.out.log"
     $stderr = "$logPrefix-$script:runNumber.err.log"
-    $script:serverProcess = Start-Process dotnet -ArgumentList @(
-        ('"' + $dll + '"'), "--urls", $baseUrl, "--TIMEID_DATA_PATH", ('"' + $testData + '"')
-    ) -PassThru -WindowStyle Hidden -WorkingDirectory (Split-Path $project -Parent) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    $arguments = @(
+        ('"' + $dll + '"'), "--urls", $baseUrl, "--TIMEID_DATA_PATH", ('"' + $script:databasePath + '"')
+    )
+    if ($script:legacyDataPath) {
+        $arguments += @("--TIMEID_LEGACY_DATA_PATH", ('"' + $script:legacyDataPath + '"'))
+    }
+    $script:serverProcess = Start-Process dotnet -ArgumentList $arguments -PassThru -WindowStyle Hidden -WorkingDirectory (Split-Path $project -Parent) -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     for ($attempt = 0; $attempt -lt 120; $attempt++) {
         if ($script:serverProcess.HasExited) {
             throw "Backend encerrado. Consulte $stdout e $stderr."
@@ -69,6 +75,10 @@ try {
     $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
     try { $listener.Start() } finally { $listener.Stop() }
     Start-TestServer
+    Stop-TestServer
+    $sqliteHeader = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($testData), 0, 15)
+    if ($sqliteHeader -ne "SQLite format 3") { throw "O armazenamento de teste nao e um banco SQLite." }
+    Start-TestServer
 
     $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
     $valid = '{"email":"teste@timeid.local","password":"TimeId@123"}'
@@ -105,6 +115,20 @@ try {
     $null = Assert-Request "Nome vazio rejeitado" PUT "/api/auth/profile" '{"username":"  "}' $session 400
     $null = Assert-Request "Alteracao de papel rejeitada" PUT "/api/auth/profile" '{"role":"Administrador"}' $session 400
     $null = Assert-Request "Restaurar perfil demo" PUT "/api/auth/profile" '{"username":"Usuario de teste","email":"teste@timeid.local","photoUrl":null}' $session 200
+    $backup = Assert-Request "Exportar dados para teste de migracao" GET "/api/workspace/backup" $null $session 200
+    $legacyJsonPath = Join-Path $root ("artifacts/test-login-legacy-" + [guid]::NewGuid() + ".json")
+    [System.IO.File]::WriteAllText($legacyJsonPath, $backup.Content)
+    Stop-TestServer
+    $script:databasePath = Join-Path $root ("artifacts/test-login-migrated-" + [guid]::NewGuid() + ".sqlite")
+    $script:legacyDataPath = $legacyJsonPath
+    Start-TestServer
+    Stop-TestServer
+    $sqliteHeader = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($script:databasePath), 0, 15)
+    if ($sqliteHeader -ne "SQLite format 3") { throw "A migracao nao criou um banco SQLite." }
+    Start-TestServer
+    $null = Assert-Request "Sessao antiga apos migracao" GET "/api/auth/me" $null $session 401
+    $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    $null = Assert-Request "Conta preservada na migracao" POST "/api/auth/login" $valid $session 200
     $regular = New-Object Microsoft.PowerShell.Commands.WebRequestSession
     $response = Assert-Request "Login usuario comum" POST "/api/auth/login" '{"email":"usuario@timeid.local","password":"TimeId@123"}' $regular 200
     if (($response.Content | ConvertFrom-Json).role -eq "Administrador") { throw "Usuario recebeu privilegio incorreto." }
@@ -123,7 +147,7 @@ try {
     $null = Assert-Request "Sessao encerrada" GET "/api/auth/me" $null $session 401
     $null = Assert-Request "Email sem diferenciar caixa" POST "/api/auth/login" '{"email":"TESTE@TIMEID.LOCAL","password":"TimeId@123"}' $session 200
     $null = Assert-Request "Espacos no email" POST "/api/auth/login" '{"email":" teste@timeid.local ","password":"TimeId@123"}' $session 200
-    $null = Assert-Request "Cadastro removido" GET "/api/employees" $null $session 404
+    $null = Assert-Request "Lista de funcionarios" GET "/api/employees" $null $session 200
     Stop-TestServer
     Start-TestServer
     $null = Assert-Request "Cookie anterior ao reinicio" GET "/api/auth/me" $null $session 401
