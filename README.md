@@ -132,77 +132,49 @@ As permissões são verificadas também pelo servidor, não apenas pelo menu.
 
 O terminal reconhece padrões faciais 2D e não inclui verificação de prova de vida. Antes de usar as marcações como controle oficial, a empresa deve avaliar a precisão e o risco de fraude com fotos ou telas, definir retenção e base legal para biometria e manter o ponto pelo app como alternativa. Dados biométricos são dados pessoais sensíveis pela LGPD.
 
+A página **Câmeras**, visível somente ao Administrador, permite ligar a webcam local para comparar rostos com os padrões já cadastrados e registrar alertas com foto JPEG reduzida, cifrada no armazenamento local e exibida em tabela restrita ao administrador. Alertas e fotos são removidos após 30 dias ou acima de 500 alertas. “Pessoa não cadastrada” significa apenas que não houve correspondência; uma falha pode acontecer por iluminação ou ângulo e exige conferência humana. Também permite cadastrar fontes RTSP/ONVIF para avaliação futura; esses fluxos reais ainda não são reproduzidos até que o conector apropriado seja definido e testado. A página não substitui prova de vida.
+
 No canto superior direito, clique no perfil e escolha **Ver perfil**. O administrador pode editar o próprio nome, e-mail e foto; o usuário comum pode alterar somente a foto nesse modal. O perfil de acesso não é alterado ali. As fotos aceitam PNG, JPEG ou WebP de até 2 MB.
 
 O modal de edição bloqueia a interação com o restante da página até **Salvar** ou **Cancelar**; clicar fora ou pressionar Esc não o fecha. Alteração de senha e autenticação em duas etapas ficam em **Configurações**. Ao ativar duas etapas, cadastre a chave em um aplicativo autenticador e guarde os códigos de recuperação exibidos; cada código de recuperação só pode ser usado uma vez.
 
 ### Dados salvos e backup
 
-O servidor grava as informações em `TIME-ID_OFC/Time-ID_backend/App_Data/timeid.json`. Esse arquivo contém contas, senhas protegidas por hash, funcionários, departamentos, marcações, férias, feriados, preferências e auditoria. Ele não entra no Git. As alterações de perfil também permanecem salvas.
+O servidor grava as informações em `TIME-ID_OFC/Time-ID_backend/App_Data/timeid.sqlite`, um banco SQLite local que contém contas, senhas protegidas por hash, funcionários, departamentos, marcações, férias, feriados, preferências e auditoria. O banco não entra no Git. Na primeira inicialização, um `App_Data/timeid.json` antigo é importado automaticamente se o SQLite ainda não tiver dados; o JSON é mantido intacto como cópia de origem.
 
-Em **Configurações > Backup**, o administrador pode baixar uma cópia completa. Guarde-a em local restrito: ela inclui dados pessoais e informações de segurança das contas. A restauração é manual: pare o servidor, preserve uma cópia do arquivo atual e substitua `App_Data/timeid.json` pelo backup antes de iniciar novamente.
+Em **Configurações > Backup**, o administrador pode baixar uma cópia completa em JSON. Guarde-a em local restrito: ela inclui dados pessoais e informações de segurança das contas. Para restaurá-la manualmente, pare o servidor, preserve o arquivo SQLite atual, coloque o JSON de backup em `App_Data/timeid.json` e mova o SQLite atual para outro nome. Ao iniciar, o sistema importará o JSON para um novo banco.
 
-Esta persistência local foi feita para uma única instância do servidor. Não execute dois servidores gravando no mesmo arquivo. Para testes ou outra instalação, a configuração `TIMEID_DATA_PATH` permite escolher outro arquivo.
+Esta persistência local foi feita para uma única instância do servidor. Não execute dois servidores usando o mesmo arquivo. Para testes ou outra instalação, a configuração `TIMEID_DATA_PATH` permite escolher outro arquivo SQLite.
 
 ### Limites da versão atual
 
 - O ponto segue quatro marcações no mesmo dia, no horário de Brasília. Correções preservam a sequência e exigem justificativa; só a última marcação do dia pode ser excluída. Há um intervalo mínimo de 30 segundos entre registros para evitar duplicação por clique.
 - O espelho soma pares concluídos. Jornada atravessando meia-noite, banco de horas, horas extras, atrasos e folha de pagamento ainda não são calculados.
-- As notificações aparecem dentro do sistema; não há envio de e-mail ou SMS. Não há integração com CEP, biometria ou reconhecimento facial.
+- As notificações aparecem dentro do sistema; não há envio de e-mail ou SMS. Não há integração com CEP ou serviços externos de biometria e reconhecimento facial.
 - Há dois perfis de acesso. A indicação de líder de departamento não cria um terceiro perfil de permissões.
-- A estrutura atual usa arquivo JSON local, sem banco SQL ou sincronização entre servidores.
+- A estrutura usa SQLite local, sem sincronização entre servidores.
 
-## Desenvolvimento
+## Arquitetura e desenvolvimento
 
-```text
-TIME-ID/
-├── README.md
-├── global.json
-├── scripts/                         # testes de integração em PowerShell
-└── TIME-ID_OFC/
-    ├── Time-ID_backend/
-    │   ├── Controllers/             # autenticação e operações da API
-    │   ├── Operations/              # modelos, persistência e duas etapas
-    │   ├── Services/                # autenticação e perfil
-    │   ├── App_Data/                # dados locais gerados ao executar
-    │   ├── wwwroot/                 # React preparado para o navegador
-    │   └── Program.cs
-    └── Time-ID_frontend/
-        ├── src/workspace/           # telas funcionais do sistema
-        ├── src/components/          # componentes compartilhados
-        ├── src/services/            # comunicação com a API C#
-        └── package.json
-```
+A arquitetura, a estrutura atual dos diretórios e os procedimentos de build e testes estão documentados em [Arch.md](Arch.md).
 
-### Atualizar a interface após alterar o código React
+### Assistente de dúvidas do TIME-ID
 
-Esta etapa é apenas para quem desenvolve as telas. O frontend usa React, CSS e Lucide React para ícones. Vite e Node.js/npm são ferramentas de preparação, não um segundo servidor necessário para executar o sistema integrado.
+O botão **Ajuda TIME-ID**, no canto inferior direito da área autenticada, abre o chatbot. O backend envia a pergunta, o histórico recente e a documentação do projeto (`Funcionalidades.md`, `Arch.md`, este README e `Roadmap.md`) ao Gemini. A IA responde de forma conversacional e objetiva, sem busca RAG local nem exposição de referências técnicas ao usuário. O conteúdo do roadmap é tratado como planejado, não como implementado. Perguntas fora do escopo ou sem resposta na documentação recebem uma resposta curta explicando que o assistente só conhece o TIME-ID.
 
-Com Node.js 22.12 ou superior instalado, execute na pasta principal:
+Para habilitar as respostas, configure uma chave da Gemini API como segredo local (não a coloque no código nem em `appsettings.json`):
 
 ```powershell
-npm.cmd ci --prefix ./TIME-ID_OFC/Time-ID_frontend
-npm.cmd run build --prefix ./TIME-ID_OFC/Time-ID_frontend
+dotnet user-secrets set --project ./TIME-ID_OFC/Time-ID_backend/TIME-ID_OFC.csproj "Gemini:ApiKey" "SUA_CHAVE_DA_GEMINI_API"
 ```
 
-O primeiro comando instala as dependências; o segundo atualiza `wwwroot`. Ao compartilhar alterações de interface, inclua os arquivos preparados de `wwwroot`. Depois, execute o comando `dotnet run` descrito acima. Para alterações apenas em C#, basta parar e iniciar o servidor novamente.
-
-### Testes de integração
-
-Na pasta principal, execute em PowerShell:
-
-```powershell
-./scripts/Test-Login.ps1
-./scripts/Test-Crud.ps1
-```
-
-Os scripts compilam o C#, iniciam servidores temporários nas portas 5099 e 5101 e usam arquivos de dados isolados em `artifacts`. Verificam login, sessões, perfil, CRUD, permissões, validações, relatórios, persistência após reinício, senha e autenticação em duas etapas. Não alteram o arquivo de dados usado na execução normal.
+Reinicie o servidor depois de configurar. O modelo padrão é `gemini-3.5-flash-lite`, escolhido por responder rapidamente a dúvidas curtas. Se ele ou o modelo definido em `Gemini__Model` estiver ocupado, o backend tenta automaticamente outro modelo compatível. Também é possível fornecer a chave pela variável de ambiente `GEMINI_API_KEY`. A chave permanece no backend e não deve ser incluída no código, no frontend ou no Git. Sem uma chave, o chat avisa que a integração precisa ser configurada; ele não recorre a respostas RAG locais. A documentação é carregada do repositório durante o desenvolvimento e copiada para a publicação junto com o backend.
 
 ## Próximas etapas
 
 - Banco de dados para implantação com múltiplas instâncias.
 - Regras avançadas de jornada, banco de horas e folha de pagamento.
-- Reconhecimento facial, geolocalização e controle de visitantes.
+- Prova de vida no reconhecimento facial, geolocalização e controle de visitantes.
 - Monitoramento de segurança, alertas externos e assistente de RH com IA.
 
 ## Equipe

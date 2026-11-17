@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 [ApiController]
 [Authorize]
@@ -7,24 +8,25 @@ using Microsoft.AspNetCore.Mvc;
 public class EmployeesController : ControllerBase
 {
     private readonly EmployeeService service;
+    private Guid ActorId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     public EmployeesController(EmployeeService service) => this.service = service;
 
     [HttpGet]
     public ActionResult<List<EmployeeResponse>> GetAll(
         [FromQuery] string? search,
-        [FromQuery] EmployeeStatus? status) => Ok(service.GetAll(search, status));
+        [FromQuery] EmployeeStatus? status) => Ok(service.GetAll(ActorId, search, status));
 
     [HttpGet("{id:guid}")]
     public ActionResult<EmployeeResponse> GetById(Guid id) =>
-        service.GetById(id) is { } employee ? Ok(employee) : NotFound();
+        service.GetById(ActorId, id) is { } employee ? Ok(employee) : NotFound();
 
     [HttpPost]
     public ActionResult<EmployeeResponse> Create(CreateEmployeeRequest request)
     {
         try
         {
-            EmployeeResponse employee = service.Create(request);
+            EmployeeResponse employee = service.Create(ActorId, request);
             return CreatedAtAction(nameof(GetById), new { id = employee.Id }, employee);
         }
         catch (ArgumentException exception)
@@ -42,7 +44,7 @@ public class EmployeesController : ControllerBase
     {
         try
         {
-            EmployeeResponse? employee = service.Update(id, request);
+            EmployeeResponse? employee = service.Update(ActorId, id, request);
             return employee is null ? NotFound() : Ok(employee);
         }
         catch (ArgumentException exception)
@@ -57,5 +59,12 @@ public class EmployeesController : ControllerBase
 
     [HttpPatch("{id:guid}/deactivate")]
     public IActionResult Deactivate(Guid id) =>
-        service.Deactivate(id) ? NoContent() : NotFound();
+        service.Deactivate(ActorId, id) ? NoContent() : NotFound();
+
+    [HttpDelete("{id:guid}")]
+    public IActionResult Delete(Guid id)
+    {
+        service.Delete(ActorId, id);
+        return NoContent();
+    }
 }

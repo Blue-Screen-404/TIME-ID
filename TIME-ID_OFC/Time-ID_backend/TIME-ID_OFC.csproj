@@ -6,10 +6,19 @@
     <RootNamespace>TIME_ID_OFC</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>timeid-password-reset-local</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.32" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../../Funcionalidades.md;../../Arch.md;../../README.md;../../Roadmap.md">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

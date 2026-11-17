@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, Search, X, House } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ProfileMenu from "../components/ProfileMenu";
@@ -11,9 +11,12 @@ import Geolocation from "./Geolocation";
 import Reports from "./Reports";
 import Settings from "./Settings";
 import { FacialAdmin } from "./Facial";
+import CameraMonitor from "./CameraMonitor";
 import { Field, Modal } from "./Ui";
 import { api, dayKey } from "../services/workspace";
 import { currentPosition } from "../services/geolocation";
+import HelpChat from "./HelpChat";
+import logoTimeId from "../assets/logo-timeid-esmeralda.png";
 import "../pages/Inicio.css";
 import "./Workspace.css";
 const departmentExamples = {
@@ -27,17 +30,19 @@ const departmentExamples = {
  "Produção": "Planejamento e execução da produção e controle de qualidade.",
  "Atendimento ao Cliente": "Atendimento de solicitações, dúvidas e suporte aos clientes."
 };
-const labels={geolocalizacao:"Geolocalização",inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
+const labels={geolocalizacao:"Geolocalização",inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",cameras:"Câmeras",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
 export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavegar, aoSair, busy:authBusy }) {
- const route=paginaAtual.replace(/^\//,"")||"inicio", page=route, admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
- const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false);
+ const page=paginaAtual.replace(/^\//,"")||"inicio", admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
+ const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false),[themeBrush,setThemeBrush]=useState(false);
+ const previousTheme=useRef(null);
  const trackingEmployeeId=data?.employeeId;
  const trackingActive=!!trackingEmployeeId&&data.punches.filter(p=>p.employeeId===trackingEmployeeId&&dayKey(p.at)===data.today).length%2===1;
  const refresh=useCallback(async()=>{const next=await api();setData(next);setLoadError("");},[]);
  useEffect(()=>{let active=true;const load=()=>api().then(next=>{if(active){setData(next);setLoadError("");}}).catch(err=>{if(active)setLoadError(err.message);});const onVisible=()=>{if(document.visibilityState==="visible")load();};load();const timer=page==="geolocalizacao"?window.setInterval(load,60000):null;window.addEventListener("focus",onVisible);document.addEventListener("visibilitychange",onVisible);return()=>{active=false;if(timer)window.clearInterval(timer);window.removeEventListener("focus",onVisible);document.removeEventListener("visibilitychange",onVisible);};},[user.id,page]);
  useEffect(()=>{if(!trackingActive||!trackingEmployeeId)return;let stopped=false;const update=async()=>{try{const location=await currentPosition();if(!stopped)await api("/live-location",{method:"POST",body:{employeeId:trackingEmployeeId,latitude:location.latitude,longitude:location.longitude,accuracyMeters:location.accuracyMeters}});}catch{/* Keep the app usable if location permission is unavailable. */}};update();const timer=window.setInterval(update,180000);return()=>{stopped=true;window.clearInterval(timer);};},[trackingEmployeeId,trackingActive]);
  useEffect(()=>{document.title=`${labels[page]??"Início"} — TIMEID`;},[page]);
- useEffect(()=>{if(data)document.documentElement.dataset.theme=data.preferences.theme;return()=>{delete document.documentElement.dataset.theme;};},[data?.preferences.theme]);
+ useEffect(()=>{const theme=data?.preferences?.theme === "claro" ? "claro" : "escuro";if(!previousTheme.current){previousTheme.current=theme;document.documentElement.dataset.theme=theme;return;}if(previousTheme.current===theme){setThemeBrush(false);return;}setThemeBrush(true);const swapTheme=window.setTimeout(()=>{document.documentElement.dataset.theme=theme;previousTheme.current=theme;},1650);const finish=window.setTimeout(()=>setThemeBrush(false),3600);return()=>{window.clearTimeout(swapTheme);window.clearTimeout(finish);};},[data?.preferences?.theme]);
+ useEffect(()=>()=>{delete document.documentElement.dataset.theme;},[]);
  function message(text,isError=false){setNotice({text,isError});}
  function navigate(target){setError("");setNotifications(false);if(target==="cadastro")setEmployee(null);aoNavegar(target);}
  async function mutate(path,method,body){setBusy(true);try{const result=await api(path,{method,body});await refresh();return result;}finally{setBusy(false);}}
@@ -64,7 +69,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  async function punch(employeeId){try{await mutate("/punches","POST",{employeeId});message("Ponto registrado com o horário do servidor.");}catch(err){message(err.message,true);}}
  async function preferences(value){try{await mutate("/preferences","PUT",value);}catch(err){message(err.message,true);}}
  if(!data)return <main className="loading-panel"><h2>TIMEID</h2><p role={loadError?"alert":"status"}>{loadError||"Carregando seus dados..."}</p>{loadError&&<button className="btn primary" onClick={()=>refresh().catch(err=>setLoadError(err.message))}>Tentar novamente</button>}</main>;
- const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios","geolocalizacao"].includes(page)||!facialAccess&&page==="facial";
+ const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios","cameras","geolocalizacao"].includes(page)||!facialAccess&&page==="facial";
  const pending=data.vacations.filter(v=>v.status==="Solicitada");
  const field=(label,key,props={})=><Field label={label} value={editor.draft[key]??""} onChange={e=>change(key,e.target.value)} {...props}/>;
  const selectedEmployee=editor?.draft.employeeId;
@@ -73,7 +78,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  const leaveDays=leaveStart && leaveEnd ? Math.round((Date.parse(leaveEnd)-Date.parse(leaveStart))/86400000)+1 : 0;
  const leaveMax=leaveStart && Number.isFinite(Date.parse(leaveStart)) ? new Date(Date.parse(leaveStart)+13*86400000).toISOString().slice(0,10) : undefined;
  const employeeSelect=<Field label="Funcionário *"><select required value={selectedEmployee??""} onChange={e=>change("employeeId",e.target.value)}><option value="">Selecione</option>{data.employees.filter(e=>e.active||e.id===selectedEmployee).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select></Field>;
- return <main className="dashboard work-app"><Sidebar pagina={page} aoNavegar={navigate} aoSair={aoSair} busy={authBusy} admin={admin} facialAccess={facialAccess}/><section className="workspace-main"><header className="workspace-header"><strong className="page-label"><House size={18}/>{labels[page]??"Início"}</strong>{admin&&<form className="global-search" onSubmit={e=>{e.preventDefault();navigate("funcionarios");}}><Search size={17}/><input aria-label="Busca geral" placeholder="Buscar funcionário, departamento..." value={query} onChange={e=>setQuery(e.target.value)}/></form>}<div className="header-actions">{data.preferences.notifications&&<div className="notifications"><button className="icon-button" aria-label="Notificações" aria-expanded={notifications} onClick={()=>setNotifications(v=>!v)}><Bell size={20}/>{pending.length>0&&<i/>}</button>{notifications&&<div className="notification-panel"><strong>Notificações</strong><button onClick={()=>navigate("ferias")}>{pending.length} solicitações de férias pendentes</button><p>{data.stats.birthdays} aniversariantes hoje</p></div>}</div>}<ProfileMenu user={user} onUpdate={updated=>{onUpdateProfile(updated);refresh().catch(err=>message(err.message,true));}}/></div></header>
+ return <main className={`dashboard work-app${themeBrush?" theme-brush-active":""}`}>{themeBrush&&<div className="theme-logo-transition" aria-hidden="true"><span/><img src={logoTimeId} alt=""/></div>}<Sidebar pagina={page} aoNavegar={navigate} aoSair={aoSair} busy={authBusy} admin={admin} facialAccess={facialAccess}/><section className="workspace-main"><header className="workspace-header"><strong className="page-label"><House size={18}/>{labels[page]??"Início"}</strong>{admin&&<form className="global-search" onSubmit={e=>{e.preventDefault();navigate("funcionarios");}}><Search size={17}/><input aria-label="Busca geral" placeholder="Buscar funcionário, departamento..." value={query} onChange={e=>setQuery(e.target.value)}/></form>}<div className="header-actions">{data.preferences.notifications&&<div className="notifications"><button className="icon-button" aria-label="Notificações" aria-expanded={notifications} onClick={()=>setNotifications(v=>!v)}><Bell size={20}/>{pending.length>0&&<i/>}</button>{notifications&&<div className="notification-panel"><strong>Notificações</strong><button onClick={()=>navigate("ferias")}>{pending.length} solicitações de férias pendentes</button><p>{data.stats.birthdays} aniversariantes hoje</p></div>}</div>}<ProfileMenu user={user} onUpdate={updated=>{onUpdateProfile(updated);refresh().catch(err=>message(err.message,true));}}/></div></header>
  <div className="workspace-content">{notice&&<div className={`notice ${notice.isError?"error":""}`} role={notice.isError?"alert":"status"}>{notice.text}<button aria-label="Fechar mensagem" onClick={()=>setNotice(null)}><X size={16}/></button></div>}
  {restricted?<section className="work-card"><h2>Acesso restrito</h2><p>Esta área é exclusiva de administradores.</p></section>:<>
  {page==="inicio"&&<Dashboard data={data} user={user} navigate={navigate}/>}
@@ -83,6 +88,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy} refresh={refresh}/>}
  {page==="geolocalizacao"&&admin&&<Geolocation data={data} refresh={refresh} message={message}/>}
  {page==="facial"&&facialAccess&&<FacialAdmin data={data} message={message} canManage={admin}/>}
+ {page==="cameras"&&admin&&<CameraMonitor/>}
  {page==="ferias"&&<Vacations data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="feriados"&&<Holidays data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="relatorios"&&<Reports data={data}/>}
@@ -90,6 +96,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {!labels[page]&&<p>Página não encontrada.</p>}
  </>}
  </div></section>
+ <HelpChat/>
  {editor&&<Modal title={editor.deleting?"Confirmar exclusão":({departments:editor.id?"Editar departamento":"Novo departamento",vacations:editor.id?"Editar férias":"Solicitar férias",holidays:editor.id?"Editar feriado":"Novo feriado",punches:"Corrigir marcação",settings:"Dados da empresa",password:"Alterar senha"})[editor.type]} busy={busy} error={error} onCancel={()=>setEditor(null)} onSubmit={saveEditor} submitLabel={editor.deleting?"Excluir":"Salvar"}>
  {editor.deleting?<><p>Deseja excluir <strong>{editor.name}</strong>?</p><p className="muted-text">Esta ação remove o registro. Funcionários com histórico devem ser inativados.</p>{editor.type==="punches"&&field("Justificativa *","reason",{required:true,minLength:5,maxLength:500})}</>:<>
  {editor.type==="departments"&&<><Field label="Exemplos de departamentos"><select value="" onChange={e=>{const name=e.target.value;if(name)setEditor(current=>({...current,draft:{...current.draft,name,description:departmentExamples[name]}}));}}><option value="">Escolha um exemplo (opcional)</option>{Object.keys(departmentExamples).map(name=><option key={name} value={name}>{name}</option>)}</select></Field><p className="muted-text">Escolha um exemplo para preencher nome e descrição, ou escreva seus próprios dados abaixo. O departamento será gravado ao salvar.</p>{field("Nome *","name",{required:true,minLength:2,maxLength:100})}{field("Descrição","description",{maxLength:400})}<Field label="Líder"><select value={editor.draft.leaderId??""} onChange={e=>change("leaderId",e.target.value)}><option value="">Não definido</option>{data.employees.filter(e=>e.active&&e.departmentId===editor.id).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}</select></Field></>}

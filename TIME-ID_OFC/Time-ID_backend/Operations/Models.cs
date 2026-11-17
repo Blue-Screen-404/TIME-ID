@@ -14,6 +14,8 @@ public class Database
     public List<Punch> Punches { get; set; } = new();
     public List<EmployeeLiveLocation> LiveLocations { get; set; } = new();
     public List<FaceProfile> FaceProfiles { get; set; } = new();
+    public List<CameraSource> CameraSources { get; set; } = new();
+    public List<CameraAlert> CameraAlerts { get; set; } = new();
     public List<Leave> Vacations { get; set; } = new();
     public List<DayOff> Holidays { get; set; } = new();
     public List<Change> Audit { get; set; } = new();
@@ -32,8 +34,12 @@ public class Account
     public string? TwoFactorSecret { get; set; }
     public string? PendingTwoFactorSecret { get; set; }
     public List<string> RecoveryHashes { get; set; } = new();
+    public string? PasswordResetHash { get; set; }
+    public DateTimeOffset? PasswordResetExpiresAt { get; set; }
+    public DateTimeOffset? PasswordResetLastSentAt { get; set; }
+    public int PasswordResetAttempts { get; set; }
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString();
-    public string Theme { get; set; } = "claro";
+    public string Theme { get; set; } = "escuro";
     public bool Notifications { get; set; } = true;
 }
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
@@ -77,6 +83,7 @@ public class Staff
     public DateOnly BirthDate { get; set; }
     public DateOnly HireDate { get; set; }
     public Guid DepartmentId { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public Guid? LeaderId { get; set; }
     public string Position { get; set; } = "";
     public string WorkMode { get; set; } = "Presencial";
     public List<string> WorkDays { get; set; } = new();
@@ -136,6 +143,27 @@ public class FaceMatchInput
 {
     [Required] public float[] Descriptor { get; set; } = Array.Empty<float>();
 }
+public class CameraSource
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = "";
+    public string Protocol { get; set; } = "RTSP";
+    public string ProtectedConnection { get; set; } = "";
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+public class CameraSourceInput
+{
+    [Required, StringLength(80, MinimumLength = 2)] public string Name { get; set; } = "";
+    [Required, RegularExpression("^(RTSP|ONVIF)$")] public string Protocol { get; set; } = "RTSP";
+    [Required, StringLength(500)] public string Endpoint { get; set; } = "";
+    [StringLength(100)] public string Username { get; set; } = "";
+    [StringLength(200)] public string Password { get; set; } = "";
+}
+public record CameraAlert(Guid Id, string CameraId, string CameraName, DateTimeOffset At, string Status, bool HasPhoto = false);
+public class CameraAlertPhotoInput
+{
+    [Required, StringLength(1_500_000)] public string ImageData { get; set; } = "";
+}
 public class PunchInput
 {
     public Guid EmployeeId { get; set; }
@@ -174,7 +202,7 @@ public class Company
 public record Change(Guid Id, DateTimeOffset At, Guid ActorId, string Actor, string Action, string Entity, string Detail);
 public class Preferences
 {
-    [RegularExpression("^(claro|escuro)$")] public string Theme { get; set; } = "claro";
+    [RegularExpression("^(claro|escuro)$")] public string Theme { get; set; } = "escuro";
     public bool Notifications { get; set; } = true;
 }
 public class PasswordChange
@@ -188,4 +216,20 @@ public class TwoFactorInput
 {
     [Required] public string Password { get; set; } = "";
     [StringLength(64)] public string? Code { get; set; }
+}
+
+public class PasswordResetRequest
+{
+    [Required, EmailAddress, StringLength(254)] public string Email { get; set; } = "";
+}
+
+public class PasswordResetVerification
+{
+    [Required, EmailAddress, StringLength(254)] public string Email { get; set; } = "";
+    [Required, RegularExpression("^\\d{6}$")] public string Code { get; set; } = "";
+}
+
+public class PasswordResetConfirmation : PasswordResetVerification
+{
+    [Required, StringLength(128, MinimumLength = 8)] public string NewPassword { get; set; } = "";
 }

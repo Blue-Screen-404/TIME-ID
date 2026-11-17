@@ -170,3 +170,852 @@ button.setting-row:hover { background:var(--soft); }
 .workday-picker legend { padding: 0 6px; font-weight: 700; }
 .workday-options { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 .workday-picker .check-field { margin: 0; }
+
+/* Identidade visual escura compartilhada por todas as abas internas. */
+:root[data-theme="escuro"] {
+  --canvas: #050d12;
+  --surface: #09151d;
+  --ink: #f2f8f6;
+  --subtle: #9aabb1;
+  --line: #203542;
+  --green: #35ef9b;
+  --soft: #0b2825;
+}
+
+:root[data-theme="escuro"] body,
+:root[data-theme="escuro"] .work-app {
+  background:
+    radial-gradient(circle at 78% 8%, rgba(0, 136, 84, 0.14), transparent 30%),
+    #050d12;
+}
+
+:root[data-theme="escuro"] .work-app .menu-lateral {
+  width: 302px;
+  flex-basis: 302px;
+  padding: 26px 14px;
+  background:
+    linear-gradient(180deg, rgba(0, 47, 36, 0.88), rgba(0, 20, 18, 0.98)),
+    url("../assets/fundo-login.png") center / cover;
+  border-right: 1px solid rgba(58, 246, 160, 0.18);
+}
+
+:root[data-theme="escuro"] .sidebar-logo {
+  display: block;
+  height: auto;
+  padding: 0 16px 18px;
+  border-bottom: 1px solid rgba(158, 255, 210, 0.1);
+}
+
+:root[data-theme="escuro"] .sidebar-logo img {
+  display: block;
+  width: 184px;
+  max-width: 100%;
+  height: auto;
+}
+
+:root[data-theme="escuro"] .work-app .menu-lateral nav { margin-top: 22px; gap: 7px; }
+
+:root[data-theme="escuro"] .work-app .menu-lateral nav a {
+  min-height: 46px;
+  border: 1px solid transparent;
+  color: #d6e9e2;
+  border-radius: 8px;
+}
+
+:root[data-theme="escuro"] .work-app .menu-lateral nav a:hover {
+  background: rgba(31, 239, 151, 0.1);
+  border-color: rgba(77, 255, 181, 0.2);
+}
+
+:root[data-theme="escuro"] .work-app .menu-lateral nav a.menu-ativo {
+  background: linear-gradient(100deg, #0fb96f, #30ee99);
+  color: #02160f;
+  box-shadow: 0 10px 25px rgba(35, 250, 150, 0.2);
+}
+
+:root[data-theme="escuro"] .workspace-header {
+  min-height: 94px;
+  background: rgba(5, 13, 18, 0.92);
+  border-color: #17303a;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="escuro"] .global-search {
+  max-width: 620px;
+  padding: 13px 17px;
+  border: 1px solid #223b48;
+  border-radius: 999px;
+  background: #0b1821;
+}
+
+:root[data-theme="escuro"] .workspace-content { max-width: 1780px; }
+
+:root[data-theme="escuro"] .work-card,
+:root[data-theme="escuro"] .stat,
+:root[data-theme="escuro"] .department-card,
+:root[data-theme="escuro"] .report-option {
+  background: linear-gradient(145deg, rgba(10, 23, 31, 0.96), rgba(5, 15, 21, 0.96));
+  border-color: #1d3540;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(178, 255, 217, 0.025);
+}
+
+:root[data-theme="escuro"] .work-card:hover,
+:root[data-theme="escuro"] .stat:hover,
+:root[data-theme="escuro"] .department-card:hover {
+  border-color: rgba(56, 239, 155, 0.38);
+}
+
+:root[data-theme="escuro"] .welcome-icon,
+:root[data-theme="escuro"] .stat-icon {
+  color: #36f0a0;
+  background: radial-gradient(circle at 32% 28%, rgba(70, 255, 176, 0.3), rgba(8, 62, 46, 0.62));
+}
+
+:root[data-theme="escuro"] .btn.primary {
+  border: 1px solid rgba(140, 255, 204, 0.35);
+  background: linear-gradient(105deg, #17c978, #39f29e);
+  color: #032016;
+  box-shadow: 0 10px 24px rgba(37, 246, 151, 0.2);
+}
+
+:root[data-theme="escuro"] .btn.secondary,
+:root[data-theme="escuro"] .filters input,
+:root[data-theme="escuro"] .filters select,
+:root[data-theme="escuro"] .card-heading input,
+:root[data-theme="escuro"] .punch-action select,
+:root[data-theme="escuro"] .setting-row select,
+:root[data-theme="escuro"] .work-field input,
+:root[data-theme="escuro"] .work-field select,
+:root[data-theme="escuro"] .work-field textarea {
+  background: #0a1720;
+  border-color: #29414c;
+  color: #ecf8f4;
+}
+
+:root[data-theme="escuro"] .work-field input:focus,
+:root[data-theme="escuro"] .work-field select:focus,
+:root[data-theme="escuro"] .work-field textarea:focus {
+  outline: 2px solid rgba(48, 242, 155, 0.36);
+  border-color: #38ef9b;
+}
+
+:root[data-theme="escuro"] .work-table th { background: #0d1c25; color: #a9bbc0; }
+:root[data-theme="escuro"] .work-table td { border-color: #1d333d; }
+:root[data-theme="escuro"] .work-table tbody tr:hover { background: rgba(23, 166, 103, 0.1); }
+:root[data-theme="escuro"] .steps { border-color: #1d3540; }
+:root[data-theme="escuro"] .steps>div.active { border-color: #39f29e; color: #4bffa9; }
+:root[data-theme="escuro"] .steps span { background: #13242e; }
+:root[data-theme="escuro"] .steps .active span { background: linear-gradient(135deg, #21cc7c, #45ffa7); color: #062116; }
+:root[data-theme="escuro"] .talent-card { background: linear-gradient(145deg, #0b3c31, #09211f); border: 1px solid rgba(56, 239, 155, 0.18); }
+:root[data-theme="escuro"] .security-tile { border: 1px solid rgba(56, 239, 155, 0.24); box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24); }
+:root[data-theme="escuro"] .work-modal { border: 1px solid #24404b; }
+
+@media (max-width: 1200px) {
+  :root[data-theme="escuro"] .work-app .menu-lateral { width: 244px; flex-basis: 244px; }
+}
+
+/* Menu inteiro visível: a barra lateral não precisa de rolagem. */
+@media (min-width: 721px) {
+  :root[data-theme="escuro"] .work-app .menu-lateral {
+    padding: 10px 12px;
+    overflow: hidden;
+  }
+
+  :root[data-theme="escuro"] .sidebar-logo {
+    padding: 0 12px 7px;
+  }
+
+  :root[data-theme="escuro"] .sidebar-logo img { width: 128px; }
+
+  :root[data-theme="escuro"] .work-app .menu-lateral nav {
+    margin-top: 7px;
+    gap: 2px;
+  }
+
+  :root[data-theme="escuro"] .work-app .menu-lateral nav a {
+    min-height: 38px;
+    padding: 8px 12px;
+    font-size: 14px;
+    gap: 12px;
+  }
+
+  :root[data-theme="escuro"] .work-app .menu-lateral nav a svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  :root[data-theme="escuro"] .work-app .menu-lateral footer {
+    margin-top: auto;
+    padding: 8px 12px 0;
+    font-size: 11px;
+  }
+
+  :root[data-theme="escuro"] .work-app .botao-sair {
+    margin-top: 5px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 721px) and (max-height: 760px) {
+  :root[data-theme="escuro"] .work-app .menu-lateral nav a {
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: 13px;
+    gap: 11px;
+  }
+
+  :root[data-theme="escuro"] .work-app .menu-lateral nav a svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  :root[data-theme="escuro"] .sidebar-logo img { width: 112px; }
+  :root[data-theme="escuro"] .work-app .menu-lateral footer { font-size: 10px; }
+}
+
+/* Em telas mais baixas, a área principal fica mais compacta para o painel
+   aparecer inteiro, sem alterar o tamanho nem a posição da sidebar. */
+@media (min-width: 721px) and (max-height: 820px) {
+  :root[data-theme="escuro"] .workspace-header {
+    min-height: 72px;
+    padding: 10px 24px;
+  }
+
+  :root[data-theme="escuro"] .workspace-content {
+    padding: 16px 22px;
+  }
+
+  :root[data-theme="escuro"] .welcome {
+    margin-bottom: 14px;
+  }
+
+  :root[data-theme="escuro"] .welcome-icon,
+  :root[data-theme="escuro"] .stat-icon {
+    padding: 10px;
+  }
+
+  :root[data-theme="escuro"] .welcome-icon svg { width: 25px; height: 25px; }
+
+  :root[data-theme="escuro"] .stats-grid {
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  :root[data-theme="escuro"] .stat {
+    min-height: 94px;
+    padding: 13px;
+    gap: 11px;
+  }
+
+  :root[data-theme="escuro"] .stat strong {
+    margin-bottom: 2px;
+    font-size: 24px;
+  }
+
+  :root[data-theme="escuro"] .work-columns { gap: 16px; }
+
+  :root[data-theme="escuro"] .work-card {
+    padding: 15px;
+    margin-bottom: 14px;
+  }
+
+  :root[data-theme="escuro"] .card-heading { margin-bottom: 11px; }
+  :root[data-theme="escuro"] .work-table th,
+  :root[data-theme="escuro"] .work-table td { padding: 9px 10px; }
+  :root[data-theme="escuro"] .empty-state { padding: 22px 14px; }
+
+  :root[data-theme="escuro"] .activity-list li { padding: 8px 0; }
+
+  :root[data-theme="escuro"] .security-tile {
+    min-height: 142px;
+    padding: 18px;
+  }
+
+  :root[data-theme="escuro"] .security-tile svg { margin-bottom: 7px; }
+  :root[data-theme="escuro"] .security-tile h3 { margin-bottom: 6px; }
+}
+
+/* A sidebar permanece fixa; somente o conteúdo da área principal pode rolar.
+   A barra continua funcionando, mas fica visualmente escondida. */
+@media (min-width: 721px) {
+  :root[data-theme="escuro"] .workspace-main {
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :root[data-theme="escuro"] .workspace-main::-webkit-scrollbar {
+    display: none;
+  }
+
+  :root[data-theme="escuro"] .workspace-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+}
+
+/* Polimento visual compartilhado pelas telas internas. */
+:root[data-theme="escuro"] .workspace-content {
+  background:
+    radial-gradient(circle at 82% 5%, rgba(36, 221, 137, 0.075), transparent 26%),
+    radial-gradient(circle at 12% 92%, rgba(0, 132, 95, 0.06), transparent 30%);
+}
+
+:root[data-theme="escuro"] .work-heading h2,
+:root[data-theme="escuro"] .welcome .work-heading h2 {
+  letter-spacing: -0.5px;
+}
+
+:root[data-theme="escuro"] .work-card,
+:root[data-theme="escuro"] .stat,
+:root[data-theme="escuro"] .department-card,
+:root[data-theme="escuro"] .report-option {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:root[data-theme="escuro"] .stat:hover,
+:root[data-theme="escuro"] .department-card:hover,
+:root[data-theme="escuro"] .report-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(62, 242, 160, 0.08);
+}
+
+:root[data-theme="escuro"] .work-card:hover {
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.25), inset 0 1px rgba(200, 255, 226, 0.05);
+}
+
+:root[data-theme="escuro"] .text-button,
+:root[data-theme="escuro"] .icon-button,
+:root[data-theme="escuro"] .btn {
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+:root[data-theme="escuro"] .text-button:hover,
+:root[data-theme="escuro"] .icon-button:hover { transform: translateY(-1px); }
+
+:root[data-theme="escuro"] .btn.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 13px 28px rgba(37, 246, 151, 0.28);
+}
+
+:root[data-theme="escuro"] .global-search:focus-within {
+  border-color: rgba(65, 245, 164, 0.72);
+  box-shadow: 0 0 0 4px rgba(49, 239, 153, 0.08);
+}
+
+:root[data-theme="escuro"] .work-table tbody tr {
+  transition: background-color 0.16s ease;
+}
+
+/* Modo claro: fundo leve e verde mais suave, preservando o contraste do texto. */
+:root[data-theme="claro"] {
+  color-scheme: light;
+  --canvas: #bfe7cf;
+  --surface: #ccefd9;
+  --ink: #103b2c;
+  --subtle: #4d715f;
+  --line: #97cfaf;
+  --green: #117d55;
+  --soft: #aee1c2;
+}
+
+:root[data-theme="claro"] body,
+:root[data-theme="claro"] .work-app {
+  background: radial-gradient(circle at 82% 8%, rgba(65, 188, 117, 0.26), transparent 28%), #bfe7cf;
+}
+
+:root[data-theme="claro"] .work-app .menu-lateral {
+  color: #effff6;
+  flex: 0 0 232px;
+  width: 232px;
+  min-height: 100vh;
+  border-right: 1px solid #116545;
+  background: linear-gradient(170deg, #19865e, #116e4d 55%, #095038);
+}
+
+:root[data-theme="claro"] .sidebar-logo {
+  display: block;
+  padding: 4px 12px 12px;
+  border-bottom: 1px solid rgba(221, 255, 237, 0.24);
+}
+
+:root[data-theme="claro"] .sidebar-logo img {
+  filter: drop-shadow(0 2px 4px rgba(0, 45, 30, 0.23));
+}
+
+:root[data-theme="claro"] .work-app .menu-lateral nav a { color: #edfff5; }
+:root[data-theme="claro"] .work-app .menu-lateral nav a:hover { background: rgba(224, 255, 238, 0.16); }
+
+:root[data-theme="claro"] .work-app .menu-lateral nav a.menu-ativo {
+  color: #093c2a;
+  background: linear-gradient(105deg, #42d88b, #83eab1);
+  box-shadow: 0 9px 20px rgba(0, 55, 35, 0.2);
+}
+
+:root[data-theme="claro"] .work-app .menu-lateral footer {
+  color: #c7ead7;
+  border-color: rgba(221, 255, 237, 0.22);
+}
+
+:root[data-theme="claro"] .work-app .botao-sair {
+  color: #effff6;
+  border-color: rgba(239, 255, 246, 0.78);
+}
+
+/* O modo claro mantém a mesma estrutura do escuro: menu completo e fixo. */
+@media (min-width: 721px) {
+  :root[data-theme="claro"] .work-app .menu-lateral {
+    padding: 10px 12px;
+    overflow: hidden;
+  }
+
+  :root[data-theme="claro"] .sidebar-logo { padding: 0 12px 7px; }
+  :root[data-theme="claro"] .sidebar-logo img { width: 128px; }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav {
+    margin-top: 7px;
+    gap: 2px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav a {
+    min-height: 38px;
+    padding: 8px 12px;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav a svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral footer {
+    margin-top: auto;
+    padding: 8px 12px 0;
+    font-size: 11px;
+  }
+
+  :root[data-theme="claro"] .work-app .botao-sair {
+    margin-top: 5px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+
+  :root[data-theme="claro"] .workspace-main {
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  :root[data-theme="claro"] .workspace-main::-webkit-scrollbar { display: none; }
+  :root[data-theme="claro"] .workspace-header { position: sticky; top: 0; z-index: 20; }
+}
+
+@media (min-width: 721px) and (max-height: 760px) {
+  :root[data-theme="claro"] .work-app .menu-lateral nav a {
+    min-height: 36px;
+    padding: 7px 10px;
+    gap: 11px;
+    font-size: 13px;
+  }
+
+  :root[data-theme="claro"] .work-app .menu-lateral nav a svg { width: 18px; height: 18px; }
+  :root[data-theme="claro"] .sidebar-logo img { width: 112px; }
+  :root[data-theme="claro"] .work-app .menu-lateral footer { font-size: 10px; }
+}
+
+/* Acabamentos do modo claro: mais profundidade, sem introduzir branco. */
+:root[data-theme="claro"] .workspace-content {
+  background:
+    radial-gradient(circle at 90% 2%, rgba(22, 155, 91, 0.16), transparent 25%),
+    radial-gradient(circle at 8% 96%, rgba(33, 173, 103, 0.12), transparent 30%);
+}
+
+:root[data-theme="claro"] .work-card,
+:root[data-theme="claro"] .stat,
+:root[data-theme="claro"] .department-card,
+:root[data-theme="claro"] .report-option {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:root[data-theme="claro"] .stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(22, 157, 91, 0.75), transparent);
+}
+
+:root[data-theme="claro"] .work-card:hover,
+:root[data-theme="claro"] .stat:hover,
+:root[data-theme="claro"] .department-card:hover,
+:root[data-theme="claro"] .report-option:hover {
+  transform: translateY(-3px);
+  border-color: #68bb8c;
+  box-shadow: 0 17px 32px rgba(18, 105, 64, 0.16);
+}
+
+:root[data-theme="claro"] .welcome-icon,
+:root[data-theme="claro"] .stat-icon {
+  box-shadow: inset 0 1px rgba(191, 247, 213, 0.55), 0 6px 13px rgba(18, 126, 76, 0.1);
+}
+
+:root[data-theme="claro"] .global-search:focus-within {
+  border-color: #38aa70;
+  box-shadow: 0 0 0 4px rgba(30, 166, 96, 0.15);
+}
+
+:root[data-theme="claro"] .btn.primary {
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+}
+
+:root[data-theme="claro"] .btn.primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+  box-shadow: 0 13px 25px rgba(18, 137, 84, 0.3);
+}
+
+:root[data-theme="claro"] .text-button,
+:root[data-theme="claro"] .icon-button { transition: transform 0.16s ease, background-color 0.16s ease; }
+:root[data-theme="claro"] .text-button:hover,
+:root[data-theme="claro"] .icon-button:hover { transform: translateY(-1px); }
+
+/* Transição de tema: deixa a troca entre claro e escuro gradual. */
+:root[data-theme] body,
+:root[data-theme] .work-app,
+:root[data-theme] .workspace-main,
+:root[data-theme] .workspace-header,
+:root[data-theme] .workspace-content,
+:root[data-theme] .menu-lateral,
+:root[data-theme] .menu-lateral nav a,
+:root[data-theme] .menu-lateral footer,
+:root[data-theme] .work-card,
+:root[data-theme] .stat,
+:root[data-theme] .department-card,
+:root[data-theme] .report-option,
+:root[data-theme] .work-table th,
+:root[data-theme] .work-table td,
+:root[data-theme] .work-field input,
+:root[data-theme] .work-field select,
+:root[data-theme] .work-field textarea,
+:root[data-theme] .filters input,
+:root[data-theme] .filters select,
+:root[data-theme] .global-search,
+:root[data-theme] .setting-row,
+:root[data-theme] .setting-row select,
+:root[data-theme] .btn.secondary,
+:root[data-theme] .security-tile {
+  transition-property: background, background-color, border-color, color, box-shadow, transform;
+  transition-duration: 1100ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme] body,
+  :root[data-theme] .work-app,
+  :root[data-theme] .workspace-main,
+  :root[data-theme] .workspace-header,
+  :root[data-theme] .workspace-content,
+  :root[data-theme] .menu-lateral,
+  :root[data-theme] .menu-lateral nav a,
+  :root[data-theme] .menu-lateral footer,
+  :root[data-theme] .work-card,
+  :root[data-theme] .stat,
+  :root[data-theme] .department-card,
+  :root[data-theme] .report-option,
+  :root[data-theme] .work-table th,
+  :root[data-theme] .work-table td,
+  :root[data-theme] .work-field input,
+  :root[data-theme] .work-field select,
+  :root[data-theme] .work-field textarea,
+  :root[data-theme] .filters input,
+  :root[data-theme] .filters select,
+  :root[data-theme] .global-search,
+  :root[data-theme] .setting-row,
+  :root[data-theme] .setting-row select,
+  :root[data-theme] .btn.secondary,
+  :root[data-theme] .security-tile {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* Onda de troca de tema: faixas verdes atravessam a tela e revelam as cores novas. */
+.theme-brush {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.theme-brush::before,
+.theme-brush::after {
+  content: "";
+  position: absolute;
+  left: -120%;
+  width: 220%;
+  height: 270px;
+  border-radius: 46% 54% 48% 52% / 62% 44% 56% 38%;
+  opacity: 0;
+  transform: rotate(-4deg);
+  filter: blur(1px);
+}
+
+.theme-brush::before {
+  top: 27%;
+  background: linear-gradient(90deg, rgba(9, 105, 64, 0.15), rgba(43, 238, 145, 0.78) 42%, rgba(19, 151, 87, 0.48) 72%, transparent);
+  box-shadow: 0 0 44px rgba(38, 239, 145, 0.42);
+}
+
+.theme-brush::after {
+  top: 43%;
+  height: 180px;
+  background: linear-gradient(90deg, transparent, rgba(157, 255, 205, 0.52) 38%, rgba(27, 205, 118, 0.68) 66%, rgba(6, 97, 59, 0.2));
+  box-shadow: 0 0 32px rgba(51, 247, 157, 0.32);
+}
+
+.theme-brush-active .theme-brush::before {
+  animation: onda-tema-principal 1250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-brush-active .theme-brush::after {
+  animation: onda-tema-secundaria 1250ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
+}
+
+@keyframes onda-tema-principal {
+  0% { opacity: 0; transform: translateX(-55%) rotate(-4deg) scaleY(0.75); }
+  18% { opacity: 0.9; }
+  72% { opacity: 0.68; }
+  100% { opacity: 0; transform: translateX(108%) rotate(3deg) scaleY(1.2); }
+}
+
+@keyframes onda-tema-secundaria {
+  0% { opacity: 0; transform: translateX(-60%) rotate(3deg) scaleY(0.7); }
+  22% { opacity: 0.72; }
+  78% { opacity: 0.55; }
+  100% { opacity: 0; transform: translateX(108%) rotate(-3deg) scaleY(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-brush-active .theme-brush::before,
+  .theme-brush-active .theme-brush::after { animation-duration: 1ms; }
+}
+
+/* Versão líquida da onda, feita em SVG para curvas mais naturais. */
+.theme-brush::before,
+.theme-brush::after { display: none; }
+
+.theme-brush svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.theme-brush .onda-luz,
+.theme-brush .onda-principal {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.theme-brush-active .onda-luz {
+  animation: onda-liquida-luz 3000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-brush-active .onda-principal {
+  animation: onda-liquida-principal 2900ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+}
+
+@keyframes onda-liquida-luz {
+  0% { opacity: 0; transform: translateX(-62%) scaleY(0.78); }
+  18% { opacity: 0.7; }
+  72% { opacity: 0.54; }
+  100% { opacity: 0; transform: translateX(62%) scaleY(1.1); }
+}
+
+@keyframes onda-liquida-principal {
+  0% { opacity: 0; transform: translateX(-62%) scaleY(0.76); }
+  16% { opacity: 0.94; }
+  70% { opacity: 0.76; }
+  100% { opacity: 0; transform: translateX(62%) scaleY(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-brush-active .onda-luz,
+  .theme-brush-active .onda-principal { animation-duration: 1ms; }
+}
+
+/* Troca de tema por desfoque: brilho verde suave, foco e nova paleta. */
+.theme-blur {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(93, 255, 179, 0.36), transparent 36%),
+    radial-gradient(circle at 12% 92%, rgba(7, 116, 71, 0.34), transparent 42%),
+    radial-gradient(circle at 92% 8%, rgba(40, 230, 140, 0.22), transparent 36%),
+    rgba(6, 64, 41, 0.2);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  animation: desfoque-tema 3000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-blur::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border: 1px solid rgba(176, 255, 215, 0.44);
+  border-radius: 50%;
+  box-shadow: 0 0 85px rgba(48, 246, 151, 0.38);
+  animation: pulso-desfoque 3000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes desfoque-tema {
+  0% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+  28% { opacity: 0.92; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  58% { opacity: 0.54; backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); }
+  100% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+}
+
+@keyframes pulso-desfoque {
+  0% { opacity: 0; transform: scale(0.56); }
+  35% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.55); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-blur,
+  .theme-blur::after { animation-duration: 3000ms; }
+}
+
+/* Troca de tema com a marca TIMEID: foco, brilho e dissolução da logo. */
+.theme-logo-transition {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  background: #010504;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  animation: fundo-marca-tema 3400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-logo-transition span {
+  position: absolute;
+  width: min(22vw, 290px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(140, 255, 199, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 50px rgba(45, 243, 150, 0.52), inset 0 0 35px rgba(45, 243, 150, 0.18);
+  animation: halo-marca-tema 3400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-logo-transition img {
+  position: relative;
+  z-index: 1;
+  width: min(26vw, 330px);
+  max-width: 72vw;
+  filter: drop-shadow(0 0 26px rgba(52, 249, 159, 0.78));
+  animation: marca-tema 3400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fundo-marca-tema {
+  0% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+  20% { opacity: 1; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+  72% { opacity: 1; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+  100% { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+}
+
+@keyframes halo-marca-tema {
+  0% { opacity: 0; transform: scale(0.35) rotate(-35deg); }
+  30% { opacity: 0.9; transform: scale(1) rotate(0deg); }
+  60% { opacity: 0.55; transform: scale(1.22) rotate(30deg); }
+  100% { opacity: 0; transform: scale(1.95) rotate(70deg); }
+}
+
+@keyframes marca-tema {
+  0% { opacity: 0; transform: scale(0.72) translateY(22px); filter: blur(14px) drop-shadow(0 0 0 rgba(52, 249, 159, 0)); }
+  28% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0) drop-shadow(0 0 26px rgba(52, 249, 159, 0.78)); }
+  58% { opacity: 1; transform: scale(1.03) translateY(-2px); }
+  82% { opacity: 0; transform: scale(0.98) translateY(-24px); filter: blur(5px) drop-shadow(0 0 42px rgba(52, 249, 159, 0.34)); }
+  100% { opacity: 0; transform: scale(0.96) translateY(-30px); filter: blur(12px) drop-shadow(0 0 0 rgba(52, 249, 159, 0)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-logo-transition,
+  .theme-logo-transition span,
+  .theme-logo-transition img { animation-duration: 3000ms; }
+}
+
+:root[data-theme="claro"] .workspace-header {
+  background: rgba(195, 232, 210, 0.94);
+  border-color: #97cfaf;
+  box-shadow: 0 5px 20px rgba(21, 92, 61, 0.06);
+}
+
+:root[data-theme="claro"] .global-search {
+  border: 1px solid #8fcaa7;
+  background: #aee0c0;
+}
+
+:root[data-theme="claro"] .work-card,
+:root[data-theme="claro"] .stat,
+:root[data-theme="claro"] .department-card,
+:root[data-theme="claro"] .report-option {
+  background: linear-gradient(145deg, #d7f2e2, #b9e5cc);
+  border-color: #97cfaf;
+  box-shadow: 0 10px 26px rgba(26, 95, 65, 0.07);
+}
+
+:root[data-theme="claro"] .work-card:hover,
+:root[data-theme="claro"] .stat:hover,
+:root[data-theme="claro"] .department-card:hover {
+  border-color: #82d9ac;
+  box-shadow: 0 14px 30px rgba(26, 132, 83, 0.12);
+}
+
+:root[data-theme="claro"] .welcome-icon,
+:root[data-theme="claro"] .stat-icon {
+  color: #118b5d;
+  background: radial-gradient(circle at 30% 25%, #d7ffea, #c5f2d8);
+}
+
+:root[data-theme="claro"] .btn.primary {
+  color: #ffffff;
+  background: linear-gradient(105deg, #18a86f, #5ad996);
+  box-shadow: 0 9px 20px rgba(33, 166, 105, 0.2);
+}
+
+:root[data-theme="claro"] .work-table th { background: #a7dcbc; }
+:root[data-theme="claro"] .work-table tbody tr:hover { background: #c8ecd7; }
+:root[data-theme="claro"] .security-tile { background: linear-gradient(140deg, #0c6a4d, #159661); }
+
+:root[data-theme="claro"] .work-field input,
+:root[data-theme="claro"] .work-field select,
+:root[data-theme="claro"] .work-field textarea,
+:root[data-theme="claro"] .filters input,
+:root[data-theme="claro"] .filters select,
+:root[data-theme="claro"] .setting-row select,
+:root[data-theme="claro"] .btn.secondary {
+  background: #c8ecd7;
+  border-color: #8fcaa7;
+  color: #103d2d;
+}
