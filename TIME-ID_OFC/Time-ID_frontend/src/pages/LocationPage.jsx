@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { divIcon, map as createMap, marker as createMarker, tileLayer } from "leaflet";
+import { Clock3, ExternalLink, MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { geoApi, locationPreviewKey } from "../services/geolocation";
+import logoTimeId from "../assets/logo-timeid-esmeralda.png";
 import "./LocationPage.css";
 
 const coordinates = new Intl.NumberFormat("pt-BR", {
@@ -125,45 +127,60 @@ export default function LocationPage({ employeeId }) {
   return (
     <div className="location-page">
       <header className="location-page-header">
-        <div className="location-page-width">TIME<span>ID</span></div>
+        <div className="location-page-width location-page-header-inner">
+          <img src={logoTimeId} alt="TIMEID — sua jornada, nosso controle" />
+          {!preview && <span className="location-live-status"><i aria-hidden="true" />Atualiza automaticamente</span>}
+        </div>
       </header>
       <main className="location-page-width location-page-content">
-        <h1>{name ? `Localização de ${name}` : "Localização do colaborador"}</h1>
         {location ? (
-          <div className="location-page-grid">
-            <LocationMap latitude={location.latitude} longitude={location.longitude} name={name} />
-            <section className="location-details" aria-labelledby="location-details-title">
-              <h2 id="location-details-title">Dados da localização</h2>
-              <div className="location-person">
-                <span className="location-avatar" aria-hidden="true">
-                  {name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase()}
-                </span>
-                <div><span>Colaborador</span><strong>{name}</strong></div>
+          <>
+            <nav className="location-breadcrumb" aria-label="Navegação estrutural">
+              <a href="/geolocalizacao">Geolocalização</a><span aria-hidden="true">›</span><span>Localização do colaborador</span>
+            </nav>
+            <div className="location-title-row">
+              <div>
+                <h1>{name ? `Localização de ${name}` : "Localização do colaborador"}</h1>
+                <p className="location-updated"><i aria-hidden="true" />{preview ? "Prévia da localização capturada" : "Última posição atualizada"} · {updatedTime.format(new Date(location.updatedAt))} (Brasília)</p>
               </div>
-              <dl>
-                <div>
-                  <dt>Endereço aproximado</dt>
-                  <dd>{location.address?.name || "Endereço indisponível"}</dd>
-                  {location.address?.attribution && <dd className="location-attribution">{location.address.attribution}</dd>}
+            </div>
+            <div className="location-page-grid">
+              <LocationMap latitude={location.latitude} longitude={location.longitude} name={name} />
+              <section className="location-details" aria-labelledby="location-details-title">
+                <div className="location-details-heading"><MapPin size={19} aria-hidden="true"/><h2 id="location-details-title">Dados da localização</h2></div>
+                <div className="location-person">
+                  <span className="location-avatar" aria-hidden="true">
+                    {name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase()}
+                  </span>
+                  <div><span>Colaborador</span><strong>{name}</strong></div>
                 </div>
-                <div className="location-coordinates">
-                  <dt>Latitude</dt><dd>{coordinates.format(location.latitude)}</dd>
-                  <dt>Longitude</dt><dd>{coordinates.format(location.longitude)}</dd>
-                  <dt>Precisão</dt><dd>±{Math.round(location.accuracyMeters)} m</dd>
-                </div>
-                <div>
-                  <dt>{preview ? "Capturada em (Brasília)" : "Última atualização (Brasília)"}</dt>
-                  <dd><time dateTime={location.updatedAt}>{updatedTime.format(new Date(location.updatedAt))}</time></dd>
-                </div>
-              </dl>
-              <a className="location-login" target="_blank" rel="noopener noreferrer"
-                href={`https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}#map=16/${location.latitude}/${location.longitude}`}>
-                Abrir no OpenStreetMap
-              </a>
-            </section>
-          </div>
+                <dl>
+                  <div className="location-address">
+                    <dt>Endereço aproximado</dt>
+                    <dd>{location.address?.name || "Endereço indisponível"}</dd>
+                    {location.address?.attribution && <dd className="location-attribution">{location.address.attribution}</dd>}
+                  </div>
+                  <div className="location-coordinates">
+                    <dt>Latitude</dt><dd>{coordinates.format(location.latitude)}</dd>
+                    <dt>Longitude</dt><dd>{coordinates.format(location.longitude)}</dd>
+                    <dt>Precisão</dt><dd>±{Math.round(location.accuracyMeters)} m</dd>
+                  </div>
+                  <div className="location-time-row">
+                    <dt><Clock3 size={15} aria-hidden="true"/>{preview ? "Capturada em (Brasília)" : "Última atualização (Brasília)"}</dt>
+                    <dd><time dateTime={location.updatedAt}>{updatedTime.format(new Date(location.updatedAt))}</time></dd>
+                  </div>
+                </dl>
+                {location.accuracyMeters >= 100 && <p className="location-accuracy-hint" role="status">A margem de precisão veio ampla do dispositivo. No Brave, permita a localização para este site e confira se a localização do Windows está ativada.</p>}
+                <a className="location-login" target="_blank" rel="noopener noreferrer"
+                  href={`https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}#map=16/${location.latitude}/${location.longitude}`}>
+                  <ExternalLink size={16} aria-hidden="true"/>Abrir no OpenStreetMap
+                </a>
+              </section>
+            </div>
+          </>
         ) : (
-          <div className="location-details">
+          <div className="location-details location-empty">
+            <h1>{preview ? "Prévia da localização" : "Localização do colaborador"}</h1>
             {error ? <p role="alert">{error}</p> : <p role="status">Carregando localização…</p>}
             {expired && <a className="location-login" href="/login">Entrar no TIMEID</a>}
           </div>
