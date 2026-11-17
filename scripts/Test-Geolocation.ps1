@@ -38,6 +38,7 @@ function Start-Server {
     $script:server = Start-Process dotnet -ArgumentList @(
         ('"' + (Join-Path $output 'TIME-ID_OFC.dll') + '"'), '--urls', $baseUrl,
         '--contentRoot', ('"' + $runDirectory + '"'), '--TIMEID_DATA_PATH', ('"' + $data + '"')
+        '--webroot', ('"' + (Join-Path $root 'TIME-ID_OFC/Time-ID_backend/wwwroot') + '"')
     ) -WorkingDirectory $runDirectory -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     for ($i = 0; $i -lt 100; $i++) {
         if ($script:server.HasExited) { throw "Servidor encerrou. Logs: $runDirectory" }
@@ -88,6 +89,16 @@ try {
         } $admin 200
     }
     $own = $staffs[0].id; $other = $staffs[1].id; $legacy = $staffs[2].id
+    $livePath = "/api/geolocation/live-location/$own"
+    $null = Request GET $livePath $null $anonymous 401
+    $null = Request GET $livePath $null $user 403
+    $null = Request GET $livePath $null $admin 404
+    $previewPath = "/api/geolocation/preview/$own"
+    $null = Request POST $previewPath (Position) $user 403
+    $null = Request POST $previewPath (Position 181) $admin 400
+    $preview = Request POST $previewPath (Position -46.65) $admin 200
+    Check ($preview.name -eq $staffs[0].name -and $preview.longitude -eq -46.65 -and $preview.updatedAt) 'Prévia retorna a captura antes de iniciar o expediente'
+    $null = Request GET $livePath $null $admin 404
     $null = Request POST '/api/work-locations' (LocationBody) $user 403
     $null = Request GET '/api/work-locations' $null $user 403
     $null = Request POST '/api/work-locations' '{' $admin 400
@@ -138,6 +149,15 @@ try {
     Check (@($state.punches).Count -eq 0) 'Solicitações rejeitadas não gravam pontos parciais'
     $before = [DateTimeOffset]::UtcNow
     $validPunch = Request POST '/api/workspace/punches' @{ employeeId = $own; location = (Position) } $user 200
+    $live = Request GET $livePath $null $admin 200
+    Check ($live.name -eq $staffs[0].name -and $live.latitude -eq 0 -and $live.longitude -eq 0 -and $live.accuracyMeters -eq 5 -and $null -eq $live.address) 'Mapa retorna a posição e o nome mesmo sem provedor de endereço'
+    $mapPage = Invoke-WebRequest "$baseUrl/geolocalizacao/mapa/$own" -WebSession $admin -UseBasicParsing -TimeoutSec 10
+    Check ($mapPage.StatusCode -eq 200 -and $mapPage.Content -match 'id="root"') 'URL direta do mapa serve a página em produção'
+    $previewPage = Invoke-WebRequest "$baseUrl/geolocalizacao?mapa=$own&previa=1" -WebSession $admin -UseBasicParsing -TimeoutSec 10
+    Check ($previewPage.StatusCode -eq 200 -and $previewPage.Content -match 'id="root"') 'Prévia abre pela rota existente de geolocalização'
+    $null = Request POST '/api/workspace/live-location' @{ employeeId = $own; latitude = -23.561414; longitude = -46.656527; accuracyMeters = 8 } $user 200
+    $live = Request GET $livePath $null $admin 200
+    Check ($live.latitude -eq -23.561414 -and $live.longitude -eq -46.656527 -and $live.updatedAt) 'Mapa retorna a posição mais recente do expediente'
     Check ($validPunch.geolocation.status -eq 'DentroDaArea' -and $validPunch.geolocation.reviewStatus -eq 'NaoNecessaria') 'Batida validada sem análise'
     Check ([DateTimeOffset]$validPunch.at -ge $before -and [DateTimeOffset]$validPunch.at -le [DateTimeOffset]::UtcNow) 'Horário oficial definido pelo servidor'
     $legacyPunch = Request POST '/api/workspace/punches' @{ employeeId = $legacy } $admin 200

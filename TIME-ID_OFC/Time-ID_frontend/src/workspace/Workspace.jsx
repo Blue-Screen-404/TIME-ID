@@ -29,7 +29,7 @@ const departmentExamples = {
 };
 const labels={geolocalizacao:"Geolocalização",inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
 export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavegar, aoSair, busy:authBusy }) {
- const route=paginaAtual.replace(/^\//,"")||"inicio", mapRoute=route.match(/^geolocalizacao\/mapa\/([^/]+)$/), page=mapRoute?"geolocalizacao":route, admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
+ const route=paginaAtual.replace(/^\//,"")||"inicio", page=route, admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
  const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false);
  const trackingEmployeeId=data?.employeeId;
  const trackingActive=!!trackingEmployeeId&&data.punches.filter(p=>p.employeeId===trackingEmployeeId&&dayKey(p.at)===data.today).length%2===1;
@@ -81,7 +81,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {page==="cadastro"&&<EmployeeForm key={employee?.id??"new"} data={data} employee={employee} save={saveStaff} createDepartment={()=>edit("departments")} cancel={()=>navigate("listar")} busy={busy} error={error}/>}
  {page==="departamentos"&&<Departments data={data} edit={edit} remove={remove}/>}
  {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy} refresh={refresh}/>}
- {page==="geolocalizacao"&&admin&&<Geolocation data={data} refresh={refresh} message={message} selectedEmployeeId={mapRoute?.[1]} navigate={navigate}/>}
+ {page==="geolocalizacao"&&admin&&<Geolocation data={data} refresh={refresh} message={message}/>}
  {page==="facial"&&facialAccess&&<FacialAdmin data={data} message={message} canManage={admin}/>}
  {page==="ferias"&&<Vacations data={data} admin={admin} edit={edit} remove={remove}/>}
  {page==="feriados"&&<Holidays data={data} admin={admin} edit={edit} remove={remove}/>}

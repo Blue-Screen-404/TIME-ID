@@ -1,10 +1,22 @@
+export const locationPreviewKey = employeeId => `timeid:location-preview:${employeeId}`;
+
+export function locationMapUrl(employeeId, preview = false) {
+  const query = new URLSearchParams({ mapa: employeeId });
+  if (preview) query.set('previa', '1');
+  return `/geolocalizacao?${query}`;
+}
+
 export async function geoApi(path, options = {}) {
   let response;
   try { response = await fetch(`/api${path}`, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...options.headers }, body: options.body === undefined ? undefined : JSON.stringify(options.body) }); }
   catch { throw new Error('Não foi possível conectar ao servidor.'); }
   if (response.status === 401) { window.dispatchEvent(new Event('timeid:expired')); throw new Error('Sua sessão expirou. Entre novamente.'); }
   const result = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(result?.errors ? Object.values(result.errors).flat().join(' ') : result?.title || 'Não foi possível concluir a operação.');
+  if (!response.ok) {
+    const error = new Error(result?.errors ? Object.values(result.errors).flat().join(' ') : result?.title || 'Não foi possível concluir a operação.');
+    error.status = response.status;
+    throw error;
+  }
   return result;
 }
 export function currentPosition() {

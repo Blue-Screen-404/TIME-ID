@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TimeId.DTOs.Geolocation;
 using TimeId.Operations;
 using TimeId.Services;
 namespace TimeId.Controllers;
@@ -9,6 +10,63 @@ namespace TimeId.Controllers;
 public sealed class GeolocationController(DataStore store, ReverseGeocodingService geocoder) : ControllerBase
 {
     private Guid ActorId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    [HttpGet("live-location/{employeeId:guid}")]
+    public async Task<IActionResult> LiveLocation(Guid employeeId, CancellationToken cancellationToken)
+    {
+        var snapshot = store.Read(db =>
+        {
+            DataStore.Admin(DataStore.Actor(db, ActorId));
+            var employee = db.Employees.FirstOrDefault(e => e.Id == employeeId && e.Active);
+            var today = DataStore.Today;
+            var onShift = db.Punches.Count(p => p.EmployeeId == employeeId && DataStore.Date(p.At) == today) % 2 == 1;
+            var location = db.LiveLocations.FirstOrDefault(l => l.EmployeeId == employeeId);
+            if (employee is null || !onShift || location is null)
+                throw new DomainError(404, "Não há uma localização disponível para este expediente.");
+
+            return new
+            {
+                employee.Name, location.Latitude, location.Longitude, location.AccuracyMeters, location.UpdatedAt,
+                ResolveAddress = db.GeolocationSettings.ReverseGeocodingEnabled
+            };
+        });
+
+        var address = await ResolveAddress(snapshot.Latitude, snapshot.Longitude, snapshot.ResolveAddress, cancellationToken);
+        return Ok(new { snapshot.Name, snapshot.Latitude, snapshot.Longitude, snapshot.AccuracyMeters, snapshot.UpdatedAt, address });
+    }
+
+    [HttpPost("preview/{employeeId:guid}")]
+    public async Task<IActionResult> Preview(Guid employeeId, PunchLocationInput input, CancellationToken cancellationToken)
+    {
+        var employee = store.Read(db =>
+        {
+            DataStore.Admin(DataStore.Actor(db, ActorId));
+            var staff = db.Employees.FirstOrDefault(e => e.Id == employeeId && e.Active)
+                ?? throw new DomainError(404, "Colaborador ativo não encontrado.");
+            return new { staff.Name, ResolveAddress = db.GeolocationSettings.ReverseGeocodingEnabled };
+        });
+        GeolocationValidationService.ValidateCoordinates(input.Latitude, input.Longitude);
+        if (input.AccuracyMeters is not double accuracy || !double.IsFinite(accuracy) || accuracy < 0 || input.CapturedAt is null)
+            throw new DomainError(400, "Informe a precisão e o horário da captura.");
+
+        var address = await ResolveAddress(input.Latitude!.Value, input.Longitude!.Value, employee.ResolveAddress, cancellationToken);
+        return Ok(new { employee.Name, input.Latitude, input.Longitude, input.AccuracyMeters, UpdatedAt = input.CapturedAt, address });
+    }
+
+    private async Task<ApproximatePlace?> ResolveAddress(double latitude, double longitude, bool enabled, CancellationToken cancellationToken)
+    {
+        if (!enabled || !geocoder.IsConfigured) return null;
+        try
+        {
+            return await geocoder.ResolveAsync(latitude, longitude, cancellationToken, includeStreet: true);
+        }
+        catch (Exception error) when (!cancellationToken.IsCancellationRequested &&
+            error is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
     [HttpGet("provider-status")]
     public IActionResult ProviderStatus() => Ok(store.Read(db =>
     {
