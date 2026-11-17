@@ -41,6 +41,16 @@ public class Program
             Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys")));
         if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
         builder.Services.AddSingleton<DataStore>();
+        builder.Services.AddSingleton<TimeId.Services.WorkLocationService>();
+        builder.Services.AddSingleton<TimeId.Services.GeolocationValidationService>();
+        builder.Services.AddHttpClient<TimeId.Services.ReverseGeocodingService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+            client.MaxResponseContentBufferSize = 65536;
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("TIMEID/1.0");
+        }).RemoveAllLoggers().ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        builder.Services.AddSingleton<TimeId.Services.GeolocationMaintenanceService>();
+        builder.Services.AddHostedService<TimeId.Services.GeolocationWorker>();
         builder.Services.AddSingleton<PasswordResetEmailService>();
         builder.Services.AddSingleton<AuthenticationService>();
         builder.Services.AddSingleton<EmployeeService>();
@@ -117,7 +127,9 @@ public class Program
                 ? Results.Redirect("/inicio")
                 : Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
         app.MapGet("/terminal", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
-        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/cameras", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
+        app.MapGet("/geolocalizacao/mapa/{employeeId:guid}", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
+            .RequireAuthorization();
+        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/cameras", "/ferias", "/feriados", "/relatorios", "/configuracoes", "/geolocalizacao" })
         {
             app.MapGet(path, () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
                 .RequireAuthorization();

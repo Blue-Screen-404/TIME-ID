@@ -5,11 +5,14 @@ namespace TimeId.Operations;
 
 public class Database
 {
+    public GeolocationSettings GeolocationSettings { get; set; } = new();
+    public List<WorkLocation> WorkLocations { get; set; } = new();
     public int Version { get; set; } = 1;
     public List<Account> Accounts { get; set; } = new();
     public List<Staff> Employees { get; set; } = new();
     public List<Team> Departments { get; set; } = new();
     public List<Punch> Punches { get; set; } = new();
+    public List<EmployeeLiveLocation> LiveLocations { get; set; } = new();
     public List<FaceProfile> FaceProfiles { get; set; } = new();
     public List<CameraSource> CameraSources { get; set; } = new();
     public List<CameraAlert> CameraAlerts { get; set; } = new();
@@ -107,12 +110,21 @@ public class Team
 }
 public class Punch
 {
+    public PunchGeolocation? Geolocation { get; set; }
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid EmployeeId { get; set; }
     public string Kind { get; set; } = "Entrada";
     public DateTimeOffset At { get; set; }
     public string? Correction { get; set; }
     public string Source { get; set; } = "App";
+}
+public class EmployeeLiveLocation
+{
+    public Guid EmployeeId { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public double AccuracyMeters { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }
 public class FaceProfile
 {
@@ -152,7 +164,12 @@ public class CameraAlertPhotoInput
 {
     [Required, StringLength(1_500_000)] public string ImageData { get; set; } = "";
 }
-public class PunchInput { public Guid EmployeeId { get; set; } }
+public class PunchInput
+{
+    public Guid EmployeeId { get; set; }
+    public TimeId.DTOs.Geolocation.PunchLocationInput? Location { get; set; }
+    [StringLength(500)] public string? LocationJustification { get; set; }
+}
 public class PunchCorrection
 {
     public DateTimeOffset At { get; set; }
