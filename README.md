@@ -157,6 +157,7 @@ Esta persistência local foi feita para uma única instância do servidor. Não 
 ## Arquitetura e desenvolvimento
 
 A arquitetura, a estrutura atual dos diretórios e os procedimentos de build e testes estão documentados em [Arch.md](Arch.md).
+Os artefatos e a auditoria de requisitos da AV2 estão em [docs/av2/](docs/av2/README.md).
 
 ### Assistente de dúvidas do TIME-ID
 
@@ -177,7 +178,7 @@ Reinicie o servidor depois de configurar. O modelo padrão é `gemini-3.5-flash-
 - Prova de vida no reconhecimento facial, geolocalização e controle de visitantes.
 - Monitoramento de segurança, alertas externos e assistente de RH com IA.
 
-## Equipe
+## Integrantes
 
 **Blue-Screen-404** — projeto acadêmico de desenvolvimento de software e gestão de pessoas.
 
