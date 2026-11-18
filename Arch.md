@@ -13,9 +13,9 @@ ASP.NET Core 8
   ├── Controllers: autenticação, área de trabalho, recursos faciais e ajuda
   ├── Services: autenticação, perfil, ajuda/RAG e serviços auxiliares
   ├── Dominios e DTOs: entidades e contratos da API
-  └── Operations/DataStore: validação, estado e persistência JSON
+  └── Operations/DataStore + TimeIdDbContext: validação, estado e persistência SQLite
           ↓
-App_Data/timeid.json
+App_Data/timeid.sqlite
 ```
 
 O frontend não possui um servidor de produção separado. Depois de preparado, seus arquivos são servidos pelo mesmo processo C# que implementa a API. Por isso, a execução documentada usa apenas `dotnet run`.
@@ -84,11 +84,13 @@ As senhas são armazenadas como hashes usando `PasswordHasher`. O ASP.NET Core D
 
 ## Persistência atual
 
-Na execução atual, o `DataStore` mantém o estado em memória e o grava em `Time-ID_backend/App_Data/timeid.json`. O caminho pode ser substituído pela configuração `TIMEID_DATA_PATH`. Quando o arquivo ainda não existe, ele é inicializado com contas de demonstração; os dados existentes não são recriados automaticamente.
+O `TimeIdDbContext` usa SQLite em `Time-ID_backend/App_Data/timeid.sqlite`. Contas, funcionários, departamentos, marcações, perfis faciais, câmeras, férias, feriados, auditoria e configurações são armazenados em tabelas próprias. Listas simples, como dias de trabalho e hashes de recuperação, são serializadas em colunas dessas tabelas.
 
-As operações de escrita são serializadas por um lock. Cada mutação é aplicada a uma cópia do estado e salva primeiro em arquivo temporário, que então substitui o arquivo principal. Isso reduz o risco de deixar o JSON parcialmente gravado, mas não transforma o armazenamento em banco transacional compartilhado. O desenho pressupõe uma única instância do servidor; várias instâncias não devem gravar no mesmo arquivo.
+Na primeira inicialização do caminho padrão, se o banco SQLite estiver vazio, o `DataStore` importa `App_Data/timeid.json` quando esse arquivo existir. A importação inclui todos os dados e só é considerada concluída depois da gravação transacional no SQLite. O JSON antigo é mantido intacto como cópia de origem e não recebe alterações posteriores. Se não houver dados anteriores, são criadas as contas de demonstração.
 
-`TimeIdDbContext` e o registro de SQLite no `Program.cs` são preparação para uma migração futura. Atualmente, o contexto não é usado para ler ou gravar os dados, nenhuma migração é executada na inicialização e o arquivo SQLite não é a persistência ativa. O armazenamento efetivo permanece sendo JSON.
+As operações usam uma cópia de trabalho em memória. Um lock serializa as mutações na instância atual; as diferenças são persistidas em transação SQLite antes de atualizar essa cópia. O desenho continua destinado a uma única instância do servidor: várias instâncias não compartilham o lock de memória. `TIMEID_DATA_PATH` define o caminho do arquivo SQLite (usado também para bancos isolados nos testes); quando esse caminho personalizado for usado com dados antigos, `TIMEID_LEGACY_DATA_PATH` indica explicitamente o JSON a importar.
+
+O backup da interface é exportado em JSON para portabilidade. Ele não deve ser copiado por cima do arquivo SQLite. Para restaurá-lo manualmente, pare o servidor, preserve o arquivo SQLite atual, coloque o JSON de backup em `App_Data/timeid.json` e mova o SQLite atual para outro nome; na próxima inicialização o JSON será importado para um novo banco.
 
 ## Build e execução de desenvolvimento
 
@@ -123,4 +125,4 @@ Os testes automatizados disponíveis são scripts PowerShell localizados em `scr
 ./scripts/Test-Crud.ps1
 ```
 
-Eles compilam o backend, iniciam servidores temporários nas portas 5099 e 5101 e usam arquivos de dados isolados em `artifacts`. Cobrem login e sessão, perfil, operações CRUD, permissões, validações, relatórios, persistência após reinício, senha e autenticação em duas etapas. Os dados da execução normal não são utilizados pelos testes.
+Eles compilam o backend, iniciam servidores temporários nas portas 5099 e 5101 e usam arquivos SQLite isolados em `artifacts`. Cobrem login e sessão, perfil, operações CRUD, permissões, validações, relatórios, importação do backup JSON para SQLite, persistência após reinício, senha e autenticação em duas etapas. Os dados da execução normal não são utilizados pelos testes.

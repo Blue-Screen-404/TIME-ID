@@ -7,12 +7,14 @@ import Employees from "./Employees";
 import EmployeeForm from "./EmployeeForm";
 import { Departments, Vacations, Holidays } from "./Records";
 import Attendance from "./Attendance";
+import Geolocation from "./Geolocation";
 import Reports from "./Reports";
 import Settings from "./Settings";
 import { FacialAdmin } from "./Facial";
 import CameraMonitor from "./CameraMonitor";
 import { Field, Modal } from "./Ui";
-import { api } from "../services/workspace";
+import { api, dayKey } from "../services/workspace";
+import { currentPosition } from "../services/geolocation";
 import HelpChat from "./HelpChat";
 import logoTimeId from "../assets/logo-timeid-esmeralda.png";
 import "../pages/Inicio.css";
@@ -28,13 +30,16 @@ const departmentExamples = {
  "Produção": "Planejamento e execução da produção e controle de qualidade.",
  "Atendimento ao Cliente": "Atendimento de solicitações, dúvidas e suporte aos clientes."
 };
-const labels={inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",cameras:"Câmeras",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
+const labels={geolocalizacao:"Geolocalização",inicio:"Início",ponto:"Ponto",facial:"Reconhecimento facial",cameras:"Câmeras",funcionarios:"Funcionários",cadastro:"Cadastrar",listar:"Listar",departamentos:"Departamentos",ferias:"Férias",feriados:"Feriados",relatorios:"Relatórios",configuracoes:"Configurações"};
 export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavegar, aoSair, busy:authBusy }) {
  const page=paginaAtual.replace(/^\//,"")||"inicio", admin=user.role==="Administrador", facialAccess=admin||user.role==="Gestor";
  const [data,setData]=useState(null),[loadError,setLoadError]=useState(""),[busy,setBusy]=useState(false),[query,setQuery]=useState(""),[employee,setEmployee]=useState(null),[editor,setEditor]=useState(null),[error,setError]=useState(""),[notice,setNotice]=useState(null),[notifications,setNotifications]=useState(false),[themeBrush,setThemeBrush]=useState(false);
  const previousTheme=useRef(null);
+ const trackingEmployeeId=data?.employeeId;
+ const trackingActive=!!trackingEmployeeId&&data.punches.filter(p=>p.employeeId===trackingEmployeeId&&dayKey(p.at)===data.today).length%2===1;
  const refresh=useCallback(async()=>{const next=await api();setData(next);setLoadError("");},[]);
- useEffect(()=>{let active=true;const load=()=>api().then(next=>{if(active){setData(next);setLoadError("");}}).catch(err=>{if(active)setLoadError(err.message);});const onVisible=()=>{if(document.visibilityState==="visible")load();};load();window.addEventListener("focus",onVisible);document.addEventListener("visibilitychange",onVisible);return()=>{active=false;window.removeEventListener("focus",onVisible);document.removeEventListener("visibilitychange",onVisible);};},[user.id,page]);
+ useEffect(()=>{let active=true;const load=()=>api().then(next=>{if(active){setData(next);setLoadError("");}}).catch(err=>{if(active)setLoadError(err.message);});const onVisible=()=>{if(document.visibilityState==="visible")load();};load();const timer=page==="geolocalizacao"?window.setInterval(load,60000):null;window.addEventListener("focus",onVisible);document.addEventListener("visibilitychange",onVisible);return()=>{active=false;if(timer)window.clearInterval(timer);window.removeEventListener("focus",onVisible);document.removeEventListener("visibilitychange",onVisible);};},[user.id,page]);
+ useEffect(()=>{if(!trackingActive||!trackingEmployeeId)return;let stopped=false;const update=async()=>{try{const location=await currentPosition();if(!stopped)await api("/live-location",{method:"POST",body:{employeeId:trackingEmployeeId,latitude:location.latitude,longitude:location.longitude,accuracyMeters:location.accuracyMeters}});}catch{/* Keep the app usable if location permission is unavailable. */}};update();const timer=window.setInterval(update,180000);return()=>{stopped=true;window.clearInterval(timer);};},[trackingEmployeeId,trackingActive]);
  useEffect(()=>{document.title=`${labels[page]??"Início"} — TIMEID`;},[page]);
  useEffect(()=>{const theme=data?.preferences?.theme === "claro" ? "claro" : "escuro";if(!previousTheme.current){previousTheme.current=theme;document.documentElement.dataset.theme=theme;return;}if(previousTheme.current===theme){setThemeBrush(false);return;}setThemeBrush(true);const swapTheme=window.setTimeout(()=>{document.documentElement.dataset.theme=theme;previousTheme.current=theme;},1650);const finish=window.setTimeout(()=>setThemeBrush(false),3600);return()=>{window.clearTimeout(swapTheme);window.clearTimeout(finish);};},[data?.preferences?.theme]);
  useEffect(()=>()=>{delete document.documentElement.dataset.theme;},[]);
@@ -64,7 +69,7 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  async function punch(employeeId){try{await mutate("/punches","POST",{employeeId});message("Ponto registrado com o horário do servidor.");}catch(err){message(err.message,true);}}
  async function preferences(value){try{await mutate("/preferences","PUT",value);}catch(err){message(err.message,true);}}
  if(!data)return <main className="loading-panel"><h2>TIMEID</h2><p role={loadError?"alert":"status"}>{loadError||"Carregando seus dados..."}</p>{loadError&&<button className="btn primary" onClick={()=>refresh().catch(err=>setLoadError(err.message))}>Tentar novamente</button>}</main>;
- const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios","cameras"].includes(page)||!facialAccess&&page==="facial";
+ const restricted=!admin&&["funcionarios","cadastro","listar","departamentos","relatorios","cameras","geolocalizacao"].includes(page)||!facialAccess&&page==="facial";
  const pending=data.vacations.filter(v=>v.status==="Solicitada");
  const field=(label,key,props={})=><Field label={label} value={editor.draft[key]??""} onChange={e=>change(key,e.target.value)} {...props}/>;
  const selectedEmployee=editor?.draft.employeeId;
@@ -80,7 +85,8 @@ export default function Workspace({ user, onUpdateProfile, paginaAtual, aoNavega
  {["funcionarios","listar"].includes(page)&&<Employees data={data} query={query} setQuery={setQuery} navigate={navigate} edit={editStaff} remove={remove} list={page==="listar"}/>}
  {page==="cadastro"&&<EmployeeForm key={employee?.id??"new"} data={data} employee={employee} save={saveStaff} createDepartment={()=>edit("departments")} cancel={()=>navigate("listar")} busy={busy} error={error}/>}
  {page==="departamentos"&&<Departments data={data} edit={edit} remove={remove}/>}
- {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy}/>}
+ {page==="ponto"&&<Attendance data={data} admin={admin} edit={edit} remove={remove} punch={punch} busy={busy} refresh={refresh}/>}
+ {page==="geolocalizacao"&&admin&&<Geolocation data={data} refresh={refresh} message={message}/>}
  {page==="facial"&&facialAccess&&<FacialAdmin data={data} message={message} canManage={admin}/>}
  {page==="cameras"&&admin&&<CameraMonitor/>}
  {page==="ferias"&&<Vacations data={data} admin={admin} edit={edit} remove={remove}/>}

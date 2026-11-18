@@ -124,6 +124,6 @@ Em **Configurações**, você pode escolher o tema claro ou escuro, ligar ou des
 
 ## Dados e limites da versão atual
 
-O servidor salva contas, funcionários, departamentos, marcações, férias, feriados, preferências e auditoria em `TIME-ID_OFC/Time-ID_backend/App_Data/timeid.json`. Esse arquivo é local e não deve ser enviado ao Git. A implementação foi feita para **uma instância do servidor**; não há sincronização entre computadores ou banco SQL ativo. O caminho dos dados pode ser alterado com `TIMEID_DATA_PATH`.
+O servidor salva contas, funcionários, departamentos, marcações, perfis faciais, câmeras, férias, feriados, preferências e auditoria em `TIME-ID_OFC/Time-ID_backend/App_Data/timeid.sqlite`. Esse banco é local e não deve ser enviado ao Git. Na primeira inicialização padrão, um `App_Data/timeid.json` antigo é importado automaticamente se o SQLite ainda estiver vazio, sem alterar o arquivo JSON original. Para usar um caminho SQLite personalizado com dados antigos, indique o JSON com `TIMEID_LEGACY_DATA_PATH`. A implementação foi feita para **uma instância do servidor**; não há sincronização entre computadores. O caminho do SQLite pode ser alterado com `TIMEID_DATA_PATH`.
 
-As telas de login, recuperação de senha, painel, terminal e áreas internas estão implementadas. Funcionalidades mencionadas no [Roadmap.md](Roadmap.md), como banco de dados para várias instâncias e regras avançadas de jornada, são planos e não devem ser consideradas prontas.
+As telas de login, recuperação de senha, painel, terminal e áreas internas estão implementadas. Funcionalidades mencionadas no [Roadmap.md](Roadmap.md), como sincronização entre várias instâncias e regras avançadas de jornada, são planos e não devem ser consideradas prontas.

@@ -83,6 +83,8 @@ namespace TIME_ID_OFC.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email");
+
                     b.ToTable("Accounts");
                 });
 
@@ -111,6 +113,8 @@ namespace TIME_ID_OFC.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("At");
 
                     b.ToTable("CameraAlerts");
                 });
@@ -170,6 +174,8 @@ namespace TIME_ID_OFC.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("At");
 
                     b.ToTable("Audit");
                 });
@@ -244,6 +250,8 @@ namespace TIME_ID_OFC.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EmployeeId");
+
                     b.ToTable("Vacations");
                 });
 
@@ -262,6 +270,9 @@ namespace TIME_ID_OFC.Migrations
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Geolocation")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -271,6 +282,8 @@ namespace TIME_ID_OFC.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "At");
 
                     b.ToTable("Punches");
                 });
@@ -376,6 +389,10 @@ namespace TIME_ID_OFC.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("LeaderId");
+
                     b.ToTable("Employees");
                 });
 
@@ -401,6 +418,129 @@ namespace TIME_ID_OFC.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Departments");
+                });
+
+            modelBuilder.Entity("TimeId.Operations.CompanySettingsRow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Cnpj")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CompanySettings");
+                });
+
+            modelBuilder.Entity("TimeId.Operations.GeolocationSettingsRow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MaxCaptureAgeSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FutureToleranceSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RequireJustification")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ManagersCanManageLocations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ManagersCanReview")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RetentionDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ReverseGeocodingEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GeolocationSettings");
+                });
+
+            modelBuilder.Entity("TimeId.Operations.WorkLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CompanyWide")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DepartmentIds")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmployeeIds")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("RadiusMeters")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WorkLocations");
+                });
+
+            modelBuilder.Entity("TimeId.Operations.EmployeeLiveLocation", b =>
+                {
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("AccuracyMeters")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("EmployeeId");
+
+                    b.ToTable("EmployeeLiveLocations");
                 });
 #pragma warning restore 612, 618
         }

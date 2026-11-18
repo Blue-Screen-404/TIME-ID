@@ -23,11 +23,14 @@ public class WorkspaceController(DataStore store, EmployeeService employees, Dep
         bool admin = actor.Role == "Administrador";
         var staff = db.Employees.Where(e => admin || e.Id == actor.EmployeeId).ToList();
         var ids = staff.Select(e => e.Id).ToHashSet();
+        var activeToday = db.Punches.Where(p => ids.Contains(p.EmployeeId) && DataStore.Date(p.At) == DataStore.Today)
+            .GroupBy(p => p.EmployeeId).Where(g => g.Count() % 2 == 1).Select(g => g.Key).ToHashSet();
         return new
         {
             employees = staff,
             departments = db.Departments,
             punches = db.Punches.Where(p => ids.Contains(p.EmployeeId)).OrderByDescending(p => p.At),
+            liveLocations = db.LiveLocations.Where(x => activeToday.Contains(x.EmployeeId)),
             vacations = db.Vacations.Where(v => ids.Contains(v.EmployeeId)),
             holidays = db.Holidays.OrderBy(h => h.Date),
             settings = admin ? db.Settings : new Company { Name = db.Settings.Name },
@@ -55,6 +58,23 @@ public class WorkspaceController(DataStore store, EmployeeService employees, Dep
     [HttpDelete("departments/{id:guid}")]
     public IActionResult DeleteTeam(Guid id) { departments.Delete(ActorId, id); return Ok(new { deleted = true }); }
     private static readonly string[] Kinds = { "Entrada", "Início do intervalo", "Retorno do intervalo", "Saída" };
+    [HttpPost("live-location")]
+    public IActionResult UpdateLiveLocation(TimeId.DTOs.Geolocation.LiveLocationInput input) => Ok(store.Write(db =>
+    {
+        var actor = DataStore.Actor(db, ActorId);
+        Require(actor.EmployeeId == input.EmployeeId, "A localização só pode ser enviada pela conta vinculada ao próprio colaborador.");
+        var staff = StaffById(db, input.EmployeeId);
+        Require(staff.Active, "Funcionário inativo não pode atualizar a localização.");
+        var todayPunches = db.Punches.Where(p => p.EmployeeId == staff.Id && DataStore.Date(p.At) == DataStore.Today).OrderBy(p => p.At).ToList();
+        Require(todayPunches.Count > 0 && todayPunches.Count % 2 == 1, "O expediente não está iniciado.");
+        TimeId.Services.GeolocationValidationService.ValidateCoordinates(input.Latitude, input.Longitude);
+        Require(input.AccuracyMeters is double accuracy && double.IsFinite(accuracy) && accuracy >= 0, "Precisão da localização inválida.");
+        var location = db.LiveLocations.FirstOrDefault(x => x.EmployeeId == staff.Id);
+        if (location is null) { location = new EmployeeLiveLocation { EmployeeId = staff.Id }; db.LiveLocations.Add(location); }
+        location.Latitude = input.Latitude!.Value; location.Longitude = input.Longitude!.Value;
+        location.AccuracyMeters = input.AccuracyMeters!.Value; location.UpdatedAt = DateTimeOffset.UtcNow;
+        return location;
+    }));
     [HttpPost("punches")]
     public IActionResult RegisterPunch(PunchInput input) => Ok(store.Write(db =>
     {
@@ -64,9 +84,34 @@ public class WorkspaceController(DataStore store, EmployeeService employees, Dep
         var day = db.Punches.Where(p => p.EmployeeId == staff.Id && DataStore.Date(p.At) == DataStore.Today).OrderBy(p => p.At).ToList();
         Require(day.Count < 4, "A jornada de hoje já foi encerrada.");
         Require(day.Count == 0 || (DateTimeOffset.UtcNow - day[^1].At).TotalSeconds >= 30, "Aguarde 30 segundos antes de registrar outra marcação.");
-        var punch = new Punch { EmployeeId = staff.Id, Kind = Kinds[day.Count], At = DateTimeOffset.UtcNow, Source = "App" };
+        var now = DateTimeOffset.UtcNow;
+        var geolocation = TimeId.Services.PunchGeolocationService.Capture(db, staff, input, now);
+        var punch = new Punch { EmployeeId = staff.Id, Kind = Kinds[day.Count], At = now, Source = "App", Geolocation = geolocation };
+        if (punch.Kind == "Entrada")
+        {
+            db.LiveLocations.RemoveAll(x => x.EmployeeId == staff.Id);
+            if (actor.EmployeeId == staff.Id && input.Location is { Latitude: double latitude, Longitude: double longitude, AccuracyMeters: double accuracy })
+                db.LiveLocations.Add(new EmployeeLiveLocation { EmployeeId = staff.Id, Latitude = latitude, Longitude = longitude, AccuracyMeters = accuracy, UpdatedAt = now });
+        }
+        if (punch.Kind == "Saída") db.LiveLocations.RemoveAll(x => x.EmployeeId == staff.Id);
         db.Punches.Add(punch); DataStore.Log(db, actor, "Registrou", "Ponto", $"{staff.Name}: {punch.Kind}"); return punch;
     }));
+    [HttpPost("punches/{id:guid}/location-review")]
+    public IActionResult ReviewPunchLocation(Guid id, TimeId.DTOs.Geolocation.ReviewPunchLocationRequest input) => Ok(store.Write(db =>
+    {
+        var actor = DataStore.Actor(db, ActorId);
+        var punch = db.Punches.FirstOrDefault(p => p.Id == id) ?? throw new DomainError(404, "Marcação não encontrada.");
+        TimeId.Services.GeolocationAccess.Require(TimeId.Services.GeolocationAccess.CanReview(db, actor, punch.EmployeeId));
+        var location = punch.Geolocation ?? throw new DomainError(400, "Marcação sem dados de geolocalização.");
+        Require(location.ReviewStatus == "Pendente", "A localização não possui análise pendente.");
+        Require(input.Decision is "Aceita" or "Recusada", "Decisão inválida.");
+        Require(!string.IsNullOrWhiteSpace(input.Reason) && input.Reason.Trim().Length >= 5 && input.Reason.Length <= 500, "Informe o motivo da análise entre 5 e 500 caracteres.");
+        location.ReviewStatus = input.Decision; location.ReviewReason = input.Reason.Trim();
+        location.ReviewedBy = actor.Id; location.ReviewedAt = DateTimeOffset.UtcNow;
+        DataStore.Log(db, actor, "Analisou localização", "Ponto", $"{id}: {input.Decision}");
+        return punch;
+    }));
+
     [HttpPut("punches/{id:guid}")]
     public IActionResult CorrectPunch(Guid id, PunchCorrection input) => Ok(store.Write(db =>
     {

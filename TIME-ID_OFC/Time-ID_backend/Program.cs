@@ -18,23 +18,39 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<HelpChatService>();
-        // A conexão é configurada para uso futuro; SQLite só cria o arquivo quando
-        // alguma operação abre a conexão ou executa uma migração explicitamente.
-        string sqliteConnection = builder.Configuration.GetConnectionString("TimeId")
-            ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "timeid.sqlite")}";
-        // Resolver caminho relativo sempre a partir da pasta do backend.
-        var sqlite = new SqliteConnectionStringBuilder(sqliteConnection);
-        if (!Path.IsPathRooted(sqlite.DataSource) && sqlite.DataSource != ":memory:")
-            sqlite.DataSource = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, sqlite.DataSource));
-        if (sqlite.DataSource != ":memory:")
-            Directory.CreateDirectory(Path.GetDirectoryName(sqlite.DataSource)!);
-        builder.Services.AddDbContextFactory<TimeIdDbContext>(options => options.UseSqlite(sqlite.ToString()));
+        SqliteConnectionStringBuilder sqliteConnection;
+        if (builder.Configuration["TIMEID_DATA_PATH"] is { Length: > 0 } dataPath)
+        {
+            sqliteConnection = new SqliteConnectionStringBuilder { DataSource = dataPath };
+        }
+        else
+        {
+            string configuredConnection = builder.Configuration.GetConnectionString("TimeId")
+                ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "timeid.sqlite")}";
+            sqliteConnection = new SqliteConnectionStringBuilder(configuredConnection);
+        }
+        if (sqliteConnection.DataSource == ":memory:")
+            throw new InvalidOperationException("TIMEID requer um arquivo SQLite persistente; bancos em memória não são suportados.");
+        if (!Path.IsPathRooted(sqliteConnection.DataSource))
+            sqliteConnection.DataSource = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, sqliteConnection.DataSource));
+        Directory.CreateDirectory(Path.GetDirectoryName(sqliteConnection.DataSource)!);
+        builder.Services.AddDbContextFactory<TimeIdDbContext>(options => options.UseSqlite(sqliteConnection.ToString()));
         // Cookies continuam invalidados por session stamp; chave local também protege os
         // descritores faciais cifrados que o administrador cadastrará no futuro.
         IDataProtectionBuilder dataProtection = builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(
             Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys")));
         if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
         builder.Services.AddSingleton<DataStore>();
+        builder.Services.AddSingleton<TimeId.Services.WorkLocationService>();
+        builder.Services.AddSingleton<TimeId.Services.GeolocationValidationService>();
+        builder.Services.AddHttpClient<TimeId.Services.ReverseGeocodingService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+            client.MaxResponseContentBufferSize = 65536;
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("TIMEID/1.0");
+        }).RemoveAllLoggers().ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        builder.Services.AddSingleton<TimeId.Services.GeolocationMaintenanceService>();
+        builder.Services.AddHostedService<TimeId.Services.GeolocationWorker>();
         builder.Services.AddSingleton<PasswordResetEmailService>();
         builder.Services.AddSingleton<AuthenticationService>();
         builder.Services.AddSingleton<EmployeeService>();
@@ -80,11 +96,8 @@ public class Program
         builder.Services.AddAuthorization();
 
         WebApplication app = builder.Build();
-        // Inicializar e migrar o SQLite na inicializacao, sem exigir login.
-        using (var scope = app.Services.CreateScope())
-        {
-            scope.ServiceProvider.GetRequiredService<DataStore>();
-        }
+        // Inicializa e aplica migrations do banco antes de servir requisições.
+        app.Services.GetRequiredService<DataStore>();
         app.Use(async (context, next) =>
         {
             if (context.Request.Path.StartsWithSegments("/api")) context.Response.Headers.CacheControl = "no-store";
@@ -115,7 +128,9 @@ public class Program
                 ? Results.Redirect("/inicio")
                 : Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
         app.MapGet("/terminal", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
-        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/cameras", "/ferias", "/feriados", "/relatorios", "/configuracoes" })
+        app.MapGet("/geolocalizacao/mapa/{employeeId:guid}", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
+            .RequireAuthorization();
+        foreach (string path in new[] { "/inicio", "/cadastro", "/funcionarios", "/listar", "/departamentos", "/ponto", "/facial", "/cameras", "/ferias", "/feriados", "/relatorios", "/configuracoes", "/geolocalizacao" })
         {
             app.MapGet(path, () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"))
                 .RequireAuthorization();
