@@ -57,6 +57,7 @@ public sealed class TimeIdDbContext(DbContextOptions<TimeIdDbContext> options) :
             entity.ToTable("Punches");
             entity.HasKey(punch => punch.Id);
             entity.HasIndex(punch => new { punch.EmployeeId, punch.At });
+            entity.OwnsOne(punch => punch.Geolocation);
         });
 
         modelBuilder.Entity<FaceProfile>(entity =>
