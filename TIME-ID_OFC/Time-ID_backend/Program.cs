@@ -96,6 +96,7 @@ public class Program
         builder.Services.AddAuthorization();
 
         WebApplication app = builder.Build();
+        // Inicializa e aplica migrations do banco antes de servir requisições.
         app.Services.GetRequiredService<DataStore>();
         app.Use(async (context, next) =>
         {
